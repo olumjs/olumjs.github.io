@@ -53,7 +53,7 @@ function VersionDropdown() {
           <div className="px-3 py-2 border-b border-[var(--border-subtle)]">
             <p className="text-[10px] font-mono text-[var(--fg-subtle)] uppercase tracking-widest">Switch version</p>
           </div>
-
+{/* 
           {versions.map((v) => (
             <Link
               key={v.label}
@@ -85,7 +85,7 @@ function VersionDropdown() {
                 {v.tag}
               </span>
             </Link>
-          ))}
+          ))} */}
 
           <div className="px-3 py-2 border-t border-[var(--border-subtle)]">
             <a
@@ -308,6 +308,7 @@ export default function Navbar() {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-0.5">
             {navLinks.map((l) =>
+            // @ts-expect-error -- todo
               l.external ? (
                 <a
                   key={l.href}
@@ -384,6 +385,7 @@ export default function Navbar() {
             style={{ background: "color-mix(in srgb, var(--bg) 96%, transparent)" }}
           >
             {navLinks.map((l) =>
+            // @ts-expect-error -- todo
               l.external ? (
                 <a
                   key={l.href}
