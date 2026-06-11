@@ -1,0 +1,427 @@
+"use client";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { general } from "@/lib/data";
+
+// const versions = [
+  // { label: "v2.0", tag: "latest", href: "/docs", current: true },
+  // { label: "v1.4", tag: "stable", href: "/docs/v1", current: false },
+  // { label: "v1.0", tag: "legacy", href: "/docs/v1.0", current: false },
+// ];
+
+function VersionDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  // const current = versions?.find((v) => v?.current)!;
+
+  return (
+    <div ref={ref} className="relative hidden sm:block">
+      {/* <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1 text-[10px] font-mono font-semibold text-[#25C97E] bg-[rgba(37,201,126,0.08)] hover:bg-[rgba(37,201,126,0.14)] border border-[rgba(37,201,126,0.2)] px-2 py-[5px] rounded transition-colors"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {current.label}
+        <svg
+          width="9" height="9" viewBox="0 0 10 10" fill="none"
+          stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+          className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        >
+          <path d="M2 3.5l3 3 3-3" />
+        </svg>
+      </button> */}
+
+      {open && (
+        <div
+          className="absolute left-0 top-full mt-2 w-48 rounded-xl overflow-hidden z-50 animate-slide-down"
+          style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}
+          role="listbox"
+        >
+          <div className="px-3 py-2 border-b border-[var(--border-subtle)]">
+            <p className="text-[10px] font-mono text-[var(--fg-subtle)] uppercase tracking-widest">Switch version</p>
+          </div>
+
+          {versions.map((v) => (
+            <Link
+              key={v.label}
+              href={v.href}
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-between px-3 py-2.5 text-sm transition-colors hover:bg-[var(--hover-overlay)]"
+              role="option"
+              aria-selected={v.current}
+            >
+              <div className="flex items-center gap-2">
+                {v.current
+                  ? <span className="w-1.5 h-1.5 rounded-full bg-[#25C97E]" />
+                  : <span className="w-1.5 h-1.5 rounded-full" />
+                }
+                <span className={`font-mono font-semibold ${v.current ? "text-[#25C97E]" : "text-[var(--fg-2)]"}`}>
+                  {v.label}
+                </span>
+              </div>
+              <span
+                className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                style={
+                  v.tag === "latest"
+                    ? { background: "rgba(37,201,126,0.12)", color: "#25C97E", border: "1px solid rgba(37,201,126,0.25)" }
+                    : v.tag === "stable"
+                    ? { background: "rgba(37,201,126,0.1)", color: "#25C97E", border: "1px solid rgba(37,201,126,0.2)" }
+                    : { background: "rgba(255,255,255,0.05)", color: "var(--fg-subtle)", border: "1px solid var(--border)" }
+                }
+              >
+                {v.tag}
+              </span>
+            </Link>
+          ))}
+
+          <div className="px-3 py-2 border-t border-[var(--border-subtle)]">
+            <a
+              href="/docs/changelog"
+              className="text-[11px] text-[var(--fg-subtle)] hover:text-[#25C97E] transition-colors font-mono"
+              onClick={() => setOpen(false)}
+            >
+              View changelog →
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Search quick-links ────────────────────────────────── */
+const SEARCH_LINKS = [
+  { label: "Introduction", category: "Docs", href: "/docs/#intro" },
+  { label: "Quick Start", category: "Docs", href: "/docs/#quick-start" },
+  { label: "Reactivity", category: "Core Concepts", href: "/docs/#reactivity" },
+  { label: "File-Based Routing", category: "Router", href: "/docs/#router" },
+  { label: "State Management", category: "Store", href: "/docs/#state-management" },
+];
+
+function SearchModal({ onClose }: { onClose: () => void }) {
+  const [query, setQuery] = useState("");
+  const [activeIdx, setActiveIdx] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const filtered = SEARCH_LINKS.filter(
+    (l) =>
+      !query ||
+      l.label.toLowerCase().includes(query.toLowerCase()) ||
+      l.category.toLowerCase().includes(query.toLowerCase())
+  );
+
+  useEffect(() => { setActiveIdx(0); }, [query]);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIdx(i => Math.min(i + 1, filtered.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIdx(i => Math.max(i - 1, 0));
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        const target = filtered[activeIdx];
+        if (target) { router.push(target.href); onClose(); }
+      }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose, filtered, activeIdx, router]);
+
+  // Scroll active item into view
+  useEffect(() => {
+    const el = listRef.current?.querySelector(`[data-idx="${activeIdx}"]`) as HTMLElement | null;
+    el?.scrollIntoView({ block: "nearest" });
+  }, [activeIdx]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-start justify-center pt-[14vh] px-4"
+      style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl overflow-hidden animate-search-appear"
+        style={{
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(37,201,126,0.08)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Input row */}
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--border)]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search docs, guides, blog posts…"
+            className="flex-1 bg-transparent text-sm text-[var(--fg)] placeholder-[var(--fg-subtle)] outline-none font-mono"
+          />
+          <kbd className="kbd">ESC</kbd>
+        </div>
+
+        {/* Results */}
+        <div ref={listRef} className="p-2 max-h-72 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <p className="text-center text-xs font-mono text-[var(--fg-subtle)] py-6">No results for &ldquo;{query}&rdquo;</p>
+          ) : (
+            <>
+              <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[var(--fg-subtle)] px-3 py-2">
+                {query ? "Results" : "Quick Navigation"}
+              </p>
+              {filtered.map((link, i) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  data-idx={i}
+                  onClick={onClose}
+                  onMouseEnter={() => setActiveIdx(i)}
+                  className={`group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                    i === activeIdx ? "bg-[var(--hover-overlay)]" : "hover:bg-[var(--hover-overlay)]"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(37,201,126,0.08)", border: "1px solid rgba(37,201,126,0.15)" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#25C97E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    </div>
+                    <span className={`transition-colors ${i === activeIdx ? "text-[var(--fg)]" : "text-[var(--fg-2)] group-hover:text-[var(--fg)]"}`}>{link.label}</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-[var(--fg-subtle)] bg-[var(--surface)] px-2 py-0.5 rounded border border-[var(--border-subtle)]">
+                    {link.category}
+                  </span>
+                </Link>
+              ))}
+            </>
+          )}
+        </div>
+
+        {/* Footer hint */}
+        <div className="px-4 py-2.5 border-t border-[var(--border-subtle)] flex items-center gap-3 text-[11px] font-mono text-[var(--fg-subtle)]">
+          <span className="flex items-center gap-1"><kbd className="kbd">↑↓</kbd> navigate</span>
+          <span className="flex items-center gap-1"><kbd className="kbd">↵</kbd> open</span>
+          <span className="flex items-center gap-1"><kbd className="kbd">ESC</kbd> close</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Search trigger button ─────────────────────────────── */
+function SearchButton({ onClick }: { onClick: () => void }) {
+  const isMac = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
+  return (
+    <button
+      onClick={onClick}
+      className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[var(--fg-2)] bg-[var(--surface)] border border-[var(--border-hover)] hover:border-[var(--fg-muted)] hover:text-[var(--fg)] transition-all duration-150 group"
+      aria-label="Search documentation"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
+      </svg>
+      <span className="text-xs font-mono">Search docs…</span>
+      <kbd className="kbd ml-1">{isMac ? "⌘" : "Ctrl"} K</kbd>
+    </button>
+  );
+}
+
+const navLinks = [
+  { href: "/docs", label: "Docs" },
+  { href: "/blog", label: "Blog" },
+];
+
+export default function Navbar() {
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const openSearch = useCallback(() => setSearchOpen(true), []);
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((s) => !s);
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  return (
+    <>
+      {searchOpen && <SearchModal onClose={closeSearch} />}
+
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "backdrop-blur-2xl border-b border-[var(--border)]" : ""}`}
+        style={scrolled ? { background: "color-mix(in srgb, var(--bg) 88%, transparent)" } : undefined}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-4">
+          {/* Logo + version */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Link href="/" className="flex items-center gap-2.5">
+              <Image src="/logo.svg" width={28} height={28} alt="Olum logo" />
+              <span className="text-[1.2rem] font-extrabold tracking-tight text-[var(--fg)] relative top-[2px]" style={{ fontFamily: "var(--font-syne)" }}>
+                Olum
+              </span>
+            </Link>
+            <VersionDropdown />
+          </div>
+
+          {/* Search */}
+          <SearchButton onClick={openSearch} />
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-0.5">
+            {navLinks.map((l) =>
+              l.external ? (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm text-[var(--fg-2)] hover:text-[var(--fg)] rounded-lg hover:bg-[var(--hover-overlay)] transition-all duration-200"
+                >
+                  {/* Discord icon */}
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.03.052a19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z" />
+                  </svg>
+                  {l.label}
+                </a>
+              ) : (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="px-4 py-2 text-sm text-[var(--fg-2)] hover:text-[var(--fg)] rounded-lg hover:bg-[var(--hover-overlay)] transition-all duration-200"
+                >
+                  {l.label}
+                </Link>
+              )
+            )}
+            <a
+              href="https://github.com/olumjs"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-[var(--fg-2)] hover:text-[var(--fg)] rounded-lg hover:bg-[var(--hover-overlay)] transition-all duration-200"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z" />
+              </svg>
+              <span className="tabular-nums">{general.githubStars}</span>
+            </a>
+          </nav>
+
+          {/* Right actions */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <ThemeToggle />
+
+            {/* Mobile search */}
+            <button
+              onClick={openSearch}
+              className="md:hidden p-2 text-[var(--fg-2)] hover:text-[var(--fg)] transition-colors rounded-lg hover:bg-[var(--surface)]"
+              aria-label="Search"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => setOpen(!open)}
+              className="md:hidden p-2 text-[var(--fg-2)] hover:text-[var(--fg)] transition-colors rounded-lg hover:bg-[var(--surface)]"
+              aria-label="Toggle menu"
+            >
+              {open ? (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M3.293 3.293a1 1 0 011.414 0L9 7.586l4.293-4.293a1 1 0 111.414 1.414L10.414 9l4.293 4.293a1 1 0 01-1.414 1.414L9 10.414l-4.293 4.293a1 1 0 01-1.414-1.414L7.586 9 3.293 4.707a1 1 0 010-1.414z" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+                  <path fillRule="evenodd" d="M2 4.5a.5.5 0 01.5-.5h13a.5.5 0 010 1h-13a.5.5 0 01-.5-.5zm0 4a.5.5 0 01.5-.5h13a.5.5 0 010 1h-13a.5.5 0 01-.5-.5zm0 4a.5.5 0 01.5-.5h13a.5.5 0 010 1h-13a.5.5 0 01-.5-.5z" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {open && (
+          <div
+            className="md:hidden border-t border-[var(--border)] backdrop-blur-2xl animate-slide-down"
+            style={{ background: "color-mix(in srgb, var(--bg) 96%, transparent)" }}
+          >
+            {navLinks.map((l) =>
+              l.external ? (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-6 py-3.5 text-sm text-[var(--fg-2)] hover:text-[var(--fg)] hover:bg-[var(--hover-overlay)] border-b border-[var(--border-subtle)] transition-colors"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.03.052a19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z" />
+                  </svg>
+                  {l.label}
+                </a>
+              ) : (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center px-6 py-3.5 text-sm text-[var(--fg-2)] hover:text-[var(--fg)] hover:bg-[var(--hover-overlay)] border-b border-[var(--border-subtle)] transition-colors"
+                >
+                  {l.label}
+                </Link>
+              )
+            )}
+            <a
+              href="https://github.com/olumjs"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-6 py-3.5 text-sm text-[var(--fg-2)] hover:text-[var(--fg)] hover:bg-[var(--hover-overlay)] transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z" />
+              </svg>
+              GitHub · {general.githubStars} ★
+            </a>
+          </div>
+        )}
+      </header>
+    </>
+  );
+}

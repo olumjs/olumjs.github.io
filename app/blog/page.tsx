@@ -1,0 +1,226 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import Footer from "@/components/Footer";
+import { featuredPost, posts } from "@/lib/blog-posts";
+
+export const metadata: Metadata = { title: "Blog" };
+
+const allTags = ["All", "release", "tutorial", "guide", "signals", "internals", "migration", "typescript", "ssr"];
+
+export default function BlogPage() {
+  return (
+    <div className="min-h-screen bg-[var(--bg)]">
+      {/* Hero header */}
+      <section className="relative pt-32 pb-16 overflow-hidden">
+        <div className="absolute inset-0 bg-dot-grid opacity-40" />
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 0%, rgba(37,201,126,0.14), transparent 70%)",
+          }}
+        />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-[#25C97E] tracking-widest uppercase mb-5 px-3 py-1.5 bg-[rgba(37,201,126,0.07)] border border-[rgba(37,201,126,0.15)] rounded-full">
+            The Olum Blog
+          </div>
+          <h1
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[var(--fg)] leading-tight mb-4"
+            style={{ fontFamily: "var(--font-syne)" }}
+          >
+            What&apos;s happening in the{" "}
+            <span className="gradient-text">Olum</span> universe
+          </h1>
+          <p className="text-base sm:text-lg text-[var(--fg-muted)] max-w-xl mx-auto">
+            Framework updates, tutorials, migration stories, and deep dives from
+            the Olum team and community.
+          </p>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+        {/* Tag filter */}
+        <div className="flex items-center gap-2 flex-wrap mb-12 overflow-x-auto pb-2">
+          {allTags.map((tag, i) => (
+            <button
+              key={tag}
+              className={`px-3 py-1.5 text-xs font-mono rounded-full border transition-all ${
+                i === 0
+                  ? "bg-[rgba(37,201,126,0.12)] border-[rgba(37,201,126,0.3)] text-[#25C97E]"
+                  : "bg-[var(--card)] border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--border-hover)] hover:text-[var(--fg-2)]"
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+
+        {/* Featured post */}
+        <div className="card-glow shine group mb-10 relative rounded-2xl bg-[var(--card)] border border-[var(--border)] overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            {/* Decorative panel */}
+            <div
+              className="relative hidden lg:block min-h-[280px]"
+              style={{
+                background: "linear-gradient(135deg, rgba(37,201,126,0.08), rgba(37,201,126,0.04))",
+              }}
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(circle at 60% 40%, rgba(37,201,126,0.2), transparent 60%)",
+                }}
+              />
+              {/* Floating version badge */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative">
+                  <div
+                    className="w-32 h-32 animate-float"
+                    style={{
+                      background: "#25C97E",
+                      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+                      filter: "drop-shadow(0 0 40px rgba(37,201,126,0.4))",
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span
+                      className="text-2xl font-extrabold text-[#09090b]"
+                      style={{ fontFamily: "var(--font-syne)" }}
+                    >
+                      v2.0
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute top-4 left-4">
+                <span className="text-xs font-mono text-[#25C97E] bg-[rgba(37,201,126,0.1)] border border-[rgba(37,201,126,0.2)] px-2 py-1 rounded">
+                  FEATURED
+                </span>
+              </div>
+            </div>
+
+            {/* Text */}
+            <div className="p-8 lg:p-10 flex flex-col justify-center">
+              <div className="flex items-center gap-2 flex-wrap mb-4">
+                {featuredPost.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-xs font-mono text-[var(--fg-subtle)] bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 rounded"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                <span className="lg:hidden text-xs font-mono text-[#25C97E] bg-[rgba(37,201,126,0.1)] border border-[rgba(37,201,126,0.2)] px-2 py-0.5 rounded">
+                  FEATURED
+                </span>
+              </div>
+              <h2
+                className="text-2xl sm:text-3xl font-extrabold text-[var(--fg)] leading-tight mb-4 group-hover:text-[#25C97E] transition-colors"
+                style={{ fontFamily: "var(--font-syne)" }}
+              >
+                {featuredPost.title}
+              </h2>
+              <p className="text-[var(--fg-muted)] leading-relaxed mb-6 line-clamp-3">
+                {featuredPost.excerpt}
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-[#09090b]"
+                    style={{ background: featuredPost.author.color }}
+                  >
+                    {featuredPost.author.avatar}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--fg)]">
+                      {featuredPost.author.name}
+                    </p>
+                    <p className="text-xs text-[var(--fg-subtle)]">
+                      {featuredPost.date} · {featuredPost.readTime}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href={`/blog/${featuredPost.slug}`}
+                  className="flex items-center gap-2 text-sm font-medium text-[#25C97E] hover:text-[#25C97E] transition-colors"
+                >
+                  Read more
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M2 7h10M8 3l4 4-4 4" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Post grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {posts.map((post, i) => (
+            <Link
+              href={`/blog/${post.slug}`}
+              key={i}
+              className="card-glow shine group flex flex-col gap-4 p-6 rounded-2xl bg-[var(--card)] border border-[var(--border)]"
+            >
+              {/* Tags */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {post.tags.slice(0, 2).map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[10px] font-mono text-[var(--fg-subtle)] bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 rounded"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Title */}
+              <h3
+                className="font-bold text-[var(--fg)] leading-snug group-hover:text-[#25C97E] transition-colors line-clamp-2"
+                style={{ fontFamily: "var(--font-syne)" }}
+              >
+                {post.title}
+              </h3>
+
+              {/* Excerpt */}
+              <p className="text-sm text-[var(--fg-muted)] leading-relaxed line-clamp-3 flex-1">
+                {post.excerpt}
+              </p>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-3 border-t border-[var(--border-subtle)] mt-auto">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-[#09090b] shrink-0"
+                    style={{ background: post.author.color }}
+                  >
+                    {post.author.avatar}
+                  </div>
+                  <span className="text-xs text-[var(--fg-subtle)] truncate">
+                    {post.author.name}
+                  </span>
+                </div>
+                <span className="text-xs text-[var(--fg-subtle)] font-mono shrink-0">
+                  {post.readTime}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Load more */}
+        <div className="text-center mt-14">
+          <button className="inline-flex items-center gap-2 px-8 py-3 text-sm font-medium text-[var(--fg-2)] bg-[var(--card)] border border-[var(--border)] rounded-xl hover:border-[var(--border-hover)] hover:text-[var(--fg)] transition-all">
+            Load more posts
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M7 2v10M3 8l4 4 4-4" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
