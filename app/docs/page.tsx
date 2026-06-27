@@ -1,106 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CodeBlock } from "@/components/CodeBlock";
+import DocsSidebar from "@/components/DocsSidebar";
 import Footer from "@/components/Footer";
 
-export const metadata: Metadata = { title: "Docs" };
+export const metadata: Metadata = { title: "Docs — OlumJS" };
 
-const INSTALL_CODE = `# npm
-npm install olum
+const buckets = [
+  { bucket: "Code", attrs: "when, each, key, on* (events), html", inside: "a JS expression" },
+  { bucket: "String", attrs: "class, style, title, href, id, props, …", inside: "a literal string; {expr} interpolates dynamics" },
+  { bucket: "Text", attrs: "element text content", inside: "{expr}, auto-escaped" },
+];
 
-# pnpm
-pnpm add olum
-
-# yarn
-yarn add olum`;
-
-const QUICKSTART_CODE = `npx create-olum@latest my-app
-cd my-app
-npm install
-npm run dev`;
-
-const HELLO_CODE = `// src/App.olum
-import { signal } from 'olum'
-
-export default function App() {
-  const name = signal('World')
-
-  return (
-    <div class="app">
-      <h1>Hello, {name}!</h1>
-      <input
-        value={name}
-        on:input={(e) => name.value = e.target.value}
-        placeholder="Type a name..."
-      />
-    </div>
-  )
-}`;
-
-const MAIN_CODE = `// src/main.ts
-import { createApp } from 'olum'
-import App from './App.olum'
-
-createApp(App).mount('#app')`;
-
-const sidebarGroups = [
-  {
-    label: "Getting Started",
-    items: [
-      { label: "Introduction", href: "/docs", active: true },
-      { label: "Installation", href: "/docs" },
-      { label: "Quick Start", href: "/docs" },
-      { label: "Project Structure", href: "/docs" },
-    ],
-  },
-  {
-    label: "Core Concepts",
-    items: [
-      { label: "Components", href: "/docs" },
-      { label: "Reactivity & Signals", href: "/docs" },
-      { label: "Lifecycle Hooks", href: "/docs" },
-      { label: "Template Syntax", href: "/docs" },
-      { label: "Props & Emits", href: "/docs" },
-      { label: "Slots", href: "/docs" },
-    ],
-  },
-  {
-    label: "Router",
-    items: [
-      { label: "File-Based Routing", href: "/docs" },
-      { label: "Navigation", href: "/docs" },
-      { label: "Dynamic Routes", href: "/docs" },
-      { label: "Route Guards", href: "/docs" },
-      { label: "Data Loading", href: "/docs" },
-    ],
-  },
-  {
-    label: "State Management",
-    items: [
-      { label: "Pinia Store", href: "/docs" },
-      { label: "Signals vs Store", href: "/docs" },
-      { label: "Devtools", href: "/docs" },
-    ],
-  },
-  {
-    label: "Advanced",
-    items: [
-      { label: "Server-Side Rendering", href: "/docs" },
-      { label: "Static Generation", href: "/docs" },
-      { label: "TypeScript Guide", href: "/docs" },
-      { label: "Testing", href: "/docs" },
-      { label: "Performance", href: "/docs" },
-    ],
-  },
-  {
-    label: "Deployment",
-    items: [
-      { label: "Build", href: "/docs" },
-      { label: "Vercel", href: "/docs" },
-      { label: "Netlify", href: "/docs" },
-      { label: "Edge", href: "/docs" },
-    ],
-  },
+const nextSteps = [
+  { label: "Get Started", href: "/docs/get-started", desc: "Scaffold your first OlumJS app in one command.", icon: "🚀" },
+  { label: "Component File Structure", href: "/docs/component-structure", desc: "Learn how .html component files are structured.", icon: "🧩" },
+  { label: "State & Reactivity", href: "/docs/state", desc: "Understand how state drives re-renders.", icon: "⚡" },
+  { label: "Quick Reference", href: "/docs/quick-reference", desc: "A cheat-sheet of all template syntax.", icon: "📋" },
 ];
 
 export default function DocsPage() {
@@ -108,56 +23,16 @@ export default function DocsPage() {
     <div className="min-h-screen bg-[var(--bg)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
         <div className="flex gap-8 py-8">
-          {/* Sidebar */}
-          <aside className="hidden lg:block w-60 shrink-0">
-            <div className="sticky top-24 overflow-y-auto max-h-[calc(100vh-6rem)] pr-2 scrollbar-thin">
-              <nav className="space-y-6">
-                {sidebarGroups.map((group) => (
-                  <div key={group.label}>
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--fg-subtle)] font-mono mb-2 px-3">
-                      {group.label}
-                    </h4>
-                    <ul className="space-y-0.5">
-                      {group.items.map((item) => (
-                        <li key={item.label}>
-                          <Link
-                            href={item.href}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-150 ${
-                              item.active
-                                ? "bg-[rgba(37,201,126,0.1)] text-[#25C97E] font-medium"
-                                : "text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[rgba(255,255,255,0.04)]"
-                            }`}
-                          >
-                            {item.active && (
-                              <span className="w-1 h-1 rounded-full bg-[#25C97E]" />
-                            )}
-                            {item.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </nav>
-            </div>
-          </aside>
+          <DocsSidebar />
 
-          {/* Main content */}
           <main className="flex-1 min-w-0">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-xs text-[var(--fg-subtle)] font-mono mb-8">
-              <Link href="/" className="hover:text-[#25C97E] transition-colors">
-                Home
-              </Link>
+              <Link href="/" className="hover:text-[#25C97E] transition-colors">Home</Link>
               <span>/</span>
-              <Link href="/docs" className="hover:text-[#25C97E] transition-colors">
-                Docs
-              </Link>
-              <span>/</span>
-              <span className="text-[#25C97E]">Introduction</span>
+              <span className="text-[#25C97E]">Docs</span>
             </div>
 
-            {/* Content */}
             <article className="prose-custom max-w-3xl">
               {/* Title */}
               <div className="mb-10">
@@ -171,124 +46,66 @@ export default function DocsPage() {
                   Introduction
                 </h1>
                 <p className="text-lg text-[var(--fg-2)] leading-relaxed">
-                  Olum is a progressive frontend framework for building reactive user
-                  interfaces. It combines signal-based reactivity with a familiar
-                  component model and compile-time optimizations for exceptional
-                  performance out of the box.
+                  OlumJS is a small, Vue/React-inspired UI framework. You write components as plain{" "}
+                  <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">.html</code>{" "}
+                  files with a{" "}
+                  <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">&lt;script&gt;</code>,
+                  a{" "}
+                  <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">&lt;style&gt;</code>,
+                  and template markup; a compiler turns each one into a JavaScript module. The template language is deliberately{" "}
+                  <strong className="text-[var(--fg)]">native-HTML-friendly</strong>: no naked{" "}
+                  <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">{"{}"}</code>{" "}
+                  in attributes, and HTML formatters/linters work on your files unchanged.
                 </p>
               </div>
 
-              {/* Divider */}
               <div className="h-px bg-[var(--border-subtle)] mb-10" />
 
-              {/* What is Olum */}
+              {/* The one rule */}
               <section className="mb-12">
                 <h2
                   className="text-2xl font-bold text-[var(--fg)] mb-4"
                   style={{ fontFamily: "var(--font-syne)" }}
                 >
-                  What is Olum?
+                  The one rule
                 </h2>
-                <p className="text-[var(--fg-2)] leading-relaxed mb-4">
-                  Unlike frameworks that use a virtual DOM, Olum compiles your
-                  components at build time into optimized JavaScript. The result is
-                  smaller bundles, faster load times, and better Core Web Vitals —
-                  without sacrificing developer experience.
-                </p>
-                <p className="text-[var(--fg-2)] leading-relaxed">
-                  At its core, Olum is built on three ideas:
-                </p>
-                <ul className="mt-4 space-y-3">
-                  {[
-                    {
-                      title: "Signals first",
-                      desc: "Fine-grained reactivity with no virtual DOM overhead.",
-                    },
-                    {
-                      title: "Compile-time magic",
-                      desc: "Your templates are compiled to surgical DOM updates.",
-                    },
-                    {
-                      title: "Progressive adoption",
-                      desc: "Start small and scale to full SSR/SSG as you grow.",
-                    },
-                  ].map((item) => (
-                    <li key={item.title} className="flex items-start gap-3">
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#25C97E] shrink-0" />
-                      <div>
-                        <span className="font-semibold text-[var(--fg)]">
-                          {item.title}:
-                        </span>{" "}
-                        <span className="text-[var(--fg-2)]">{item.desc}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              {/* Quick Start */}
-              <section className="mb-12">
-                <h2
-                  className="text-2xl font-bold text-[var(--fg)] mb-4"
-                  style={{ fontFamily: "var(--font-syne)" }}
-                >
-                  Quick Start
-                </h2>
-                <p className="text-[var(--fg-2)] leading-relaxed mb-5">
-                  The fastest way to get started is with the official CLI. It
-                  scaffolds a full project with TypeScript, routing, and dev server
-                  configured:
-                </p>
-                <CodeBlock code={QUICKSTART_CODE} filename="Terminal" showCopy />
-              </section>
-
-              {/* Installation */}
-              <section className="mb-12">
-                <h2
-                  className="text-2xl font-bold text-[var(--fg)] mb-4"
-                  style={{ fontFamily: "var(--font-syne)" }}
-                >
-                  Manual Installation
-                </h2>
-                <p className="text-[var(--fg-2)] leading-relaxed mb-5">
-                  Prefer to set things up yourself? Install Olum into an existing
-                  project:
-                </p>
-                <CodeBlock code={INSTALL_CODE} filename="Terminal" showCopy />
-              </section>
-
-              {/* Hello World */}
-              <section className="mb-12">
-                <h2
-                  className="text-2xl font-bold text-[var(--fg)] mb-4"
-                  style={{ fontFamily: "var(--font-syne)" }}
-                >
-                  Your First Component
-                </h2>
-                <p className="text-[var(--fg-2)] leading-relaxed mb-5">
-                  Olum components live in <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">.olum</code> files.
-                  Here&apos;s a reactive greeting with a live input:
-                </p>
-                <div className="space-y-4">
-                  <CodeBlock code={HELLO_CODE} filename="src/App.olum" showCopy />
-                  <CodeBlock code={MAIN_CODE} filename="src/main.ts" showCopy />
-                </div>
-              </section>
-
-              {/* Info box */}
-              <div className="flex gap-4 p-5 rounded-xl bg-[rgba(37,201,126,0.06)] border border-[rgba(37,201,126,0.2)] mb-12">
-                <span className="text-xl mt-0.5">💡</span>
-                <div>
-                  <p className="text-sm font-semibold text-[#25C97E] mb-1">
-                    TypeScript is optional but recommended
-                  </p>
+                <div className="flex gap-4 p-5 rounded-xl bg-[rgba(37,201,126,0.06)] border border-[rgba(37,201,126,0.2)] mb-6">
+                  <span className="text-xl mt-0.5">💡</span>
                   <p className="text-sm text-[var(--fg-2)] leading-relaxed">
-                    Olum has first-class TypeScript support. All official packages
-                    ship with types. When using TypeScript, your props, emits, and
-                    slots are automatically inferred from your component definition.
+                    <strong className="text-[var(--fg)]">Everything lives inside <code className="text-[#25C97E] font-mono">&quot;&quot;</code>:</strong>{" "}
+                    <code className="text-[#25C97E] font-mono">when</code> /{" "}
+                    <code className="text-[#25C97E] font-mono">each</code> /{" "}
+                    <code className="text-[#25C97E] font-mono">key</code> /{" "}
+                    <code className="text-[#25C97E] font-mono">on*</code> /{" "}
+                    <code className="text-[#25C97E] font-mono">html</code> hold a JS expression;{" "}
+                    <strong className="text-[var(--fg)]">props and all other attributes</strong> are literal strings with{" "}
+                    <code className="text-[#25C97E] font-mono">{"{expr}"}</code> inside for dynamics;
+                    and <strong className="text-[var(--fg)]">text</strong> is{" "}
+                    <code className="text-[#25C97E] font-mono">{"{expr}"}</code>, auto-escaped.
                   </p>
                 </div>
-              </div>
+
+                <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-[var(--card)] border-b border-[var(--border)]">
+                        <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">Bucket</th>
+                        <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">Attributes</th>
+                        <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">Inside &quot;&quot;</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border-subtle)]">
+                      {buckets.map((row) => (
+                        <tr key={row.bucket} className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
+                          <td className="px-4 py-2.5 font-semibold text-[var(--fg)]">{row.bucket}</td>
+                          <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">{row.attrs}</td>
+                          <td className="px-4 py-2.5 text-[var(--fg-2)]">{row.inside}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
 
               {/* Next steps */}
               <section>
@@ -296,44 +113,19 @@ export default function DocsPage() {
                   className="text-2xl font-bold text-[var(--fg)] mb-6"
                   style={{ fontFamily: "var(--font-syne)" }}
                 >
-                  Next Steps
+                  Where to go next
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    {
-                      title: "Core Concepts",
-                      desc: "Learn about components, reactivity, and the template syntax.",
-                      href: "/docs",
-                      icon: "📖",
-                    },
-                    {
-                      title: "Router Guide",
-                      desc: "Add file-based routing to your Olum application.",
-                      href: "/docs",
-                      icon: "🗺️",
-                    },
-                    {
-                      title: "State Management",
-                      desc: "Manage global state with the official @olum/store.",
-                      href: "/docs",
-                      icon: "🗄️",
-                    },
-                    {
-                      title: "Examples",
-                      desc: "Browse real-world examples and starter templates.",
-                      href: "/docs",
-                      icon: "✨",
-                    },
-                  ].map((card) => (
+                  {nextSteps.map((card) => (
                     <Link
-                      key={card.title}
+                      key={card.label}
                       href={card.href}
                       className="card-glow flex gap-4 p-5 rounded-xl bg-[var(--card)] border border-[var(--border)] group"
                     >
                       <span className="text-2xl mt-0.5">{card.icon}</span>
                       <div>
                         <h3 className="font-semibold text-[var(--fg)] group-hover:text-[#25C97E] transition-colors mb-1">
-                          {card.title}
+                          {card.label}
                         </h3>
                         <p className="text-sm text-[var(--fg-muted)]">{card.desc}</p>
                       </div>
@@ -345,10 +137,10 @@ export default function DocsPage() {
               {/* Pagination */}
               <div className="flex justify-end mt-16 pt-8 border-t border-[var(--border-subtle)]">
                 <Link
-                  href="/docs"
-                  className="flex items-center gap-2 text-sm text-[#25C97E] hover:text-[#25C97E] transition-colors font-medium"
+                  href="/docs/get-started"
+                  className="flex items-center gap-2 text-sm text-[#25C97E] font-medium hover:opacity-80 transition-opacity"
                 >
-                  Installation
+                  Get Started
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M2 7h10M8 3l4 4-4 4" />
                   </svg>
@@ -357,30 +149,23 @@ export default function DocsPage() {
             </article>
           </main>
 
-          {/* Right: Table of contents */}
+          {/* Right aside */}
           <aside className="hidden xl:block w-52 shrink-0">
             <div className="sticky top-24">
               <h4 className="text-[10px] font-bold uppercase tracking-widest text-[var(--fg-subtle)] font-mono mb-3">
                 On this page
               </h4>
-              <nav className="space-y-1">
-                {[
-                  "What is Olum?",
-                  "Quick Start",
-                  "Manual Installation",
-                  "Your First Component",
-                  "Next Steps",
-                ].map((item) => (
+              <nav className="space-y-0.5">
+                {["The one rule", "Where to go next"].map((item) => (
                   <a
                     key={item}
                     href="#"
-                    className="block text-xs text-[var(--fg-subtle)] hover:text-[#25C97E] py-1 transition-colors"
+                    className="block text-xs text-[var(--fg-subtle)] hover:text-[#25C97E] py-0.5 transition-colors"
                   >
                     {item}
                   </a>
                 ))}
               </nav>
-
               <div className="mt-8 pt-6 border-t border-[var(--border-subtle)]">
                 <a
                   href="https://github.com/olumjs"

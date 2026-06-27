@@ -103,12 +103,36 @@ function VersionDropdown() {
 }
 
 /* ─── Search quick-links ────────────────────────────────── */
-const SEARCH_LINKS = [
-  { label: "Introduction", category: "Docs", href: "/docs/#intro" },
-  { label: "Quick Start", category: "Docs", href: "/docs/#quick-start" },
-  { label: "Reactivity", category: "Core Concepts", href: "/docs/#reactivity" },
-  { label: "File-Based Routing", category: "Router", href: "/docs/#router" },
-  { label: "State Management", category: "Store", href: "/docs/#state-management" },
+type SearchLink = { label: string; category: string; href: string; featured?: true };
+
+const SEARCH_LINKS: SearchLink[] = [
+  // Getting Started
+  { label: "Introduction", category: "Getting Started", href: "/docs", featured: true },
+  { label: "Get Started", category: "Getting Started", href: "/docs/get-started", featured: true },
+  { label: "Component File Structure", category: "Getting Started", href: "/docs/component-structure" },
+  { label: "Bootstrapping an App", category: "Getting Started", href: "/docs/bootstrap" },
+  // Reactivity
+  { label: "State & Reactivity", category: "Reactivity", href: "/docs/state", featured: true },
+  { label: "Text Interpolation", category: "Reactivity", href: "/docs/text-interpolation", featured: true },
+  { label: "Watchers", category: "Reactivity", href: "/docs/watchers" },
+  // Template Syntax
+  { label: "Conditionals", category: "Template Syntax", href: "/docs/conditionals", featured: true },
+  { label: "Show / Hide", category: "Template Syntax", href: "/docs/show" },
+  { label: "Loops", category: "Template Syntax", href: "/docs/loops", featured: true },
+  { label: "Events", category: "Template Syntax", href: "/docs/events", featured: true },
+  { label: "Two-way Binding", category: "Template Syntax", href: "/docs/two-way-binding" },
+  { label: "Attributes", category: "Template Syntax", href: "/docs/attributes" },
+  { label: "Raw HTML", category: "Template Syntax", href: "/docs/raw-html" },
+  // Components
+  { label: "Components & Props", category: "Components", href: "/docs/components", featured: true },
+  { label: "Slots", category: "Components", href: "/docs/slots" },
+  { label: "Imports", category: "Components", href: "/docs/imports" },
+  // Advanced
+  { label: "Scoped CSS", category: "Advanced", href: "/docs/scoped-css" },
+  { label: "Lifecycle Hooks", category: "Advanced", href: "/docs/lifecycle" },
+  { label: "Escaping & Security", category: "Advanced", href: "/docs/security" },
+  { label: "Common Mistakes", category: "Advanced", href: "/docs/common-mistakes", featured: true },
+  { label: "Quick Reference", category: "Advanced", href: "/docs/quick-reference", featured: true },
 ];
 
 function SearchModal({ onClose }: { onClose: () => void }) {
@@ -118,12 +142,13 @@ function SearchModal({ onClose }: { onClose: () => void }) {
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const filtered = SEARCH_LINKS.filter(
-    (l) =>
-      !query ||
-      l.label.toLowerCase().includes(query.toLowerCase()) ||
-      l.category.toLowerCase().includes(query.toLowerCase())
-  );
+  const filtered = query
+    ? SEARCH_LINKS.filter(
+        (l) =>
+          l.label.toLowerCase().includes(query.toLowerCase()) ||
+          l.category.toLowerCase().includes(query.toLowerCase())
+      )
+    : SEARCH_LINKS.filter((l) => l.featured);
 
   useEffect(() => { setActiveIdx(0); }, [query]);
 
@@ -254,7 +279,6 @@ function SearchButton({ onClick }: { onClick: () => void }) {
 
 const navLinks = [
   { href: "/docs", label: "Docs" },
-  { href: "/blog", label: "Blog" },
 ];
 
 export default function Navbar() {
