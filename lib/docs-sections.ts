@@ -51,6 +51,14 @@ export const sidebarGroups: SidebarGroup[] = [
   },
 ];
 
+export const sectionMeta: Record<string, { title: string; group: string }> = Object.fromEntries(
+  sidebarGroups.flatMap((g) =>
+    g.items
+      .filter((i) => i.href.startsWith("/docs/") && i.href !== "/docs")
+      .map((i) => [i.href.replace("/docs/", ""), { title: i.label, group: g.label }])
+  )
+);
+
 export const docOrder = [
   "/docs",
   "/docs/get-started",
