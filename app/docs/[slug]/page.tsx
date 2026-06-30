@@ -110,6 +110,82 @@ const RAW_HTML_ATTR_CODE = `<div html="state.articleHtml"></div>
 
 const RAW_HTML_INLINE_CODE = `<p>Intro: {olum.html(state.snippetHtml)} — end.</p>`;
 
+const SCOPE_DEFAULT_CODE = `<!-- No scope attributes → every prop and method is PRIVATE (encapsulated). -->
+<script>
+  const name  = "Ann";
+  const age   = 30;
+  const greet = () => "Hi " + name;
+</script>`;
+
+const SCOPE_KEYWORDS_CODE = `<!-- Expose all props AND methods -->
+<script public> … </script>
+
+<!-- Expose all props only (methods stay private) -->
+<script public-props> … </script>
+
+<!-- Expose all methods only (props stay private) -->
+<script public-methods> … </script>
+
+<!-- Explicitly private (the default) — both dimensions -->
+<script private> … </script>
+<script private-props> … </script>
+<script private-methods> … </script>`;
+
+const SCOPE_EXAMPLE_CODE = `<script public-props exclude-age exclude-name private-methods exclude-get-age>
+  const age     = 30;
+  const name    = "Ann";
+  const role    = "admin";
+
+  const getAge  = () => age;
+  const getRole = () => role;
+</script>
+
+<!--
+  props:   public  EXCEPT age, name   →  role is public; age + name private
+  methods: private EXCEPT getAge      →  getAge is public; getRole private
+-->`;
+
+const SCOPE_ORDER_CODE = `['public-props', 'exclude-age', 'exclude-name',  'private-methods', 'exclude-get-age']
+      ↓               ↓              ↓                 ↓                  ↓
+  open props    →   age      →     name          close props      →    getAge
+                                                  open methods      close methods (end)`;
+
+const SCOPE_KEBAB_CODE = `getAge    →  exclude-get-age
+userName  →  exclude-user-name
+isActive  →  exclude-is-active`;
+
+const ROUTER_SETUP_CODE = `import Olum from "olum";
+import Router from "olum-router";
+
+import App from "./App.js";
+import NotFound from "./NotFound.js";
+import About from "./About.js";
+
+const routes = [
+  { path: "/", comp: App },
+  { path: "/about", comp: About },
+  { path: "/404", comp: NotFound },
+];
+const config = { mode: "history", root: "/", err: "/404", routes: routes };
+const router = new Router(config);
+
+new Olum().$("#app").use(router);`;
+
+const ROUTER_VIEW_CODE = `<!-- The matched route's component renders wherever you place <router-view>. -->
+<nav>
+  <a href="/" link>Home</a>
+  <a href="/about" link>About</a>
+</nav>
+
+<router-view></router-view>`;
+
+const ROUTER_LINK_CODE = `<!-- Add the \`link\` attribute so the router intercepts the click -->
+<!-- (no full page reload) instead of letting the browser navigate. -->
+<a href="/about" link>About</a>
+
+<!-- Without \`link\`, this is a normal browser navigation. -->
+<a href="/about">About (hard reload)</a>`;
+
 const COMPONENTS_CODE = `<script>
   import StatusBadge from "./StatusBadge";
   import CounterCard from "./CounterCard";
@@ -642,6 +718,187 @@ const sections: Record<string, Section> = {
           <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">.js</code>):
         </p>
         <CodeBlock code={IMPORTS_CODE} filename="Component.html" showCopy />
+      </>
+    ),
+  },
+
+  scope: {
+    title: "Props & Methods Scope",
+    group: "Components",
+    content: () => (
+      <>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-6">
+          A component&apos;s top-level{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">const</code>{" "}
+          props and methods are{" "}
+          <strong className="text-[var(--fg)]">private by default</strong> — encapsulated to the component. Add scope
+          attributes to the{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">&lt;script&gt;</code>{" "}
+          opening tag to selectively make them public.
+        </p>
+        <CodeBlock code={SCOPE_DEFAULT_CODE} filename="Component.html" showCopy />
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          Visibility keywords
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          Six keywords toggle whole groups. The bare{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">public</code>{" "}/{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">private</code>{" "}
+          forms apply to <strong className="text-[var(--fg)]">both</strong> props and methods; the{" "}
+          <code className="text-[#25C97E] font-mono">-props</code> / <code className="text-[#25C97E] font-mono">-methods</code>{" "}
+          forms target one dimension.
+        </p>
+        <CodeBlock code={SCOPE_KEYWORDS_CODE} filename="Component.html" showCopy />
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          Exceptions — <code className="font-mono text-[#25C97E]">exclude-*</code>
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          An{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">exclude-&lt;name&gt;</code>{" "}
+          attribute carves an exception out of the <strong className="text-[var(--fg)]">currently open</strong> visibility
+          group — it flips that one member to the opposite visibility:
+        </p>
+        <div className="overflow-x-auto rounded-xl border border-[var(--border)] mb-6">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[var(--card)] border-b border-[var(--border)]">
+                <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">Open group</th>
+                <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold"><code>exclude-x</code> does</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border-subtle)]">
+              <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
+                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">public / public-props / public-methods</td>
+                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">makes <code className="font-mono text-red-400">x</code> private (removed from the public set)</td>
+              </tr>
+              <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
+                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">private / private-props / private-methods</td>
+                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">makes <code className="font-mono text-[#25C97E]">x</code> public (the one member that&apos;s surfaced)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <CodeBlock code={SCOPE_EXAMPLE_CODE} filename="Component.html" showCopy />
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          Order matters
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          Attributes are read <strong className="text-[var(--fg)]">left to right</strong>. A visibility keyword
+          &ldquo;opens&rdquo; a group; every following{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">exclude-*</code>{" "}
+          attaches to it until the next keyword opens a new group.
+        </p>
+        <CodeBlock code={SCOPE_ORDER_CODE} filename="reading order" showCopy />
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          camelCase → kebab-case
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          HTML attribute names are case-insensitive, so a camelCase prop or method must be written as{" "}
+          <strong className="text-[var(--fg)]">kebab-case</strong> in the{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">exclude-*</code>{" "}
+          name — the compiler converts it back:
+        </p>
+        <CodeBlock code={SCOPE_KEBAB_CODE} filename="naming" showCopy />
+        <div className="mt-6 flex gap-4 p-5 rounded-xl bg-[rgba(37,201,126,0.06)] border border-[rgba(37,201,126,0.2)]">
+          <span className="text-xl mt-0.5">💡</span>
+          <p className="text-sm text-[var(--fg-2)] leading-relaxed">
+            Reactive <code className="text-[#25C97E] font-mono">state</code> is governed by the{" "}
+            <strong className="text-[var(--fg)]">props</strong> scope. Exclude the whole reactive object with{" "}
+            <code className="text-[#25C97E] font-mono">exclude-state</code> under a public-props group to keep it private.
+          </p>
+        </div>
+      </>
+    ),
+  },
+
+  router: {
+    title: "Router",
+    group: "Routing",
+    content: () => (
+      <>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-6">
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">olum-router</code>{" "}
+          maps URL paths to components. Build a{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">config</code>,{" "}
+          create a{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">Router</code>, and pass it to{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">.use()</code>{" "}
+          instead of a root component.
+        </p>
+        <CodeBlock code={ROUTER_SETUP_CODE} filename="main.js" showCopy />
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          Config options
+        </h2>
+        <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[var(--card)] border-b border-[var(--border)]">
+                <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">Key</th>
+                <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">Value</th>
+                <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">What it does</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border-subtle)]">
+              <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
+                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">mode</td>
+                <td className="px-4 py-2.5 font-mono text-xs text-[var(--fg-2)]">&quot;history&quot; | &quot;hash&quot;</td>
+                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">
+                  <code className="font-mono text-[#25C97E]">history</code> = clean URLs (<code className="font-mono">/about</code>);{" "}
+                  <code className="font-mono text-[#25C97E]">hash</code> = <code className="font-mono">/#/about</code> (no server config needed).
+                </td>
+              </tr>
+              <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
+                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">root</td>
+                <td className="px-4 py-2.5 font-mono text-xs text-[var(--fg-2)]">&quot;/&quot;</td>
+                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">Base path the app is served from. Use a sub-path (e.g. <code className="font-mono">&quot;/app/&quot;</code>) when not at the domain root.</td>
+              </tr>
+              <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
+                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">err</td>
+                <td className="px-4 py-2.5 font-mono text-xs text-[var(--fg-2)]">&quot;/404&quot;</td>
+                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">Path the router redirects to when no route matches. Must exist in <code className="font-mono">routes</code>.</td>
+              </tr>
+              <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
+                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">routes</td>
+                <td className="px-4 py-2.5 font-mono text-xs text-[var(--fg-2)]">{"{ path, comp }[]"}</td>
+                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">Each entry maps a URL <code className="font-mono">path</code> to the <code className="font-mono">comp</code> component that renders for it.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          Rendering the matched route
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          Place a{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">&lt;router-view&gt;</code>{" "}
+          where the active route&apos;s component should appear — typically inside a layout shell with persistent navigation around it.
+        </p>
+        <CodeBlock code={ROUTER_VIEW_CODE} filename="Layout.html" showCopy />
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          Navigating with <code className="font-mono text-[#25C97E]">link</code>
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          Mark an anchor with the{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">link</code>{" "}
+          attribute and the router handles the click as a client-side transition — no full page reload.
+        </p>
+        <CodeBlock code={ROUTER_LINK_CODE} filename="Component.html" showCopy />
+        <div className="mt-6 flex gap-4 p-5 rounded-xl bg-[rgba(255,200,0,0.06)] border border-[rgba(255,200,0,0.2)]">
+          <span className="text-base mt-0.5">⚠️</span>
+          <p className="text-sm text-[var(--fg-2)] leading-relaxed">
+            In <code className="text-[#25C97E] font-mono">history</code> mode the server must fall back to{" "}
+            <code className="text-[#25C97E] font-mono">index.html</code> for unknown paths, otherwise a hard refresh on{" "}
+            <code className="text-[#25C97E] font-mono">/about</code> 404s. <code className="text-[#25C97E] font-mono">hash</code>{" "}
+            mode avoids this entirely.
+          </p>
+        </div>
       </>
     ),
   },

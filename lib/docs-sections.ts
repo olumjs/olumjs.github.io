@@ -37,6 +37,13 @@ export const sidebarGroups: SidebarGroup[] = [
       { label: "Components & Props", href: "/docs/components" },
       { label: "Slots", href: "/docs/slots" },
       { label: "Imports", href: "/docs/imports" },
+      { label: "Props & Methods Scope", href: "/docs/scope" },
+    ],
+  },
+  {
+    label: "Routing",
+    items: [
+      { label: "Router", href: "/docs/router" },
     ],
   },
   {
@@ -77,6 +84,8 @@ export const docOrder = [
   "/docs/components",
   "/docs/slots",
   "/docs/imports",
+  "/docs/scope",
+  "/docs/router",
   "/docs/scoped-css",
   "/docs/lifecycle",
   "/docs/security",
