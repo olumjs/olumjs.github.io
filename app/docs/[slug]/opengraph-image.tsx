@@ -88,7 +88,7 @@ export default async function OgImage({ params }: Props) {
 
         {/* URL */}
         <div style={{ position: "absolute", bottom: 60, right: 100, color: "#25C97E", fontSize: 18, fontWeight: 500 }}>
-          {siteConfig.domain}/docs/{slug}
+          {`${siteConfig.domain}/docs/${slug}`}
         </div>
       </div>
     ),

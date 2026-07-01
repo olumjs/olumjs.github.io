@@ -62,7 +62,7 @@ export default function OgImage() {
         </div>
 
         <div style={{ position: "absolute", bottom: 60, right: 100, color: "#25C97E", fontSize: 18, fontWeight: 500 }}>
-          {siteConfig.domain}/docs
+          {`${siteConfig.domain}/docs`}
         </div>
       </div>
     ),

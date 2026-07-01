@@ -154,24 +154,25 @@ const SCOPE_KEBAB_CODE = `getAge    →  exclude-get-age
 userName  →  exclude-user-name
 isActive  →  exclude-is-active`;
 
-const ROUTER_SETUP_CODE = `import Olum from "olum";
-import Router from "olum-router";
+const ROUTER_STRUCTURE_CODE = `src/
+├── page.html                 → /
+├── not-found.html            → Global 404 page
+│
+├── about/
+│   └── page.html             → /about
+│
+├── blog/
+│   ├── page.html             → /blog
+│   └── [slug]/
+│       └── page.html         → /blog/:slug
+│
+├── users/
+│   ├── page.html             → /users
+│   └── [id]/
+│       └── page.html         → /users/:id`;
 
-import App from "./App.js";
-import NotFound from "./NotFound.js";
-import About from "./About.js";
-
-const routes = [
-  { path: "/", comp: App },
-  { path: "/about", comp: About },
-  { path: "/404", comp: NotFound },
-];
-const config = { mode: "history", root: "/", err: "/404", routes: routes };
-const router = new Router(config);
-
-new Olum().$("#app").use(router);`;
-
-const ROUTER_VIEW_CODE = `<!-- The matched route's component renders wherever you place <router-view>. -->
+const ROUTER_VIEW_CODE = `<!-- index.html -->
+<!-- The matched route's page renders wherever you place <router-view>. -->
 <nav>
   <a href="/" link>Home</a>
   <a href="/about" link>About</a>
@@ -821,51 +822,46 @@ const sections: Record<string, Section> = {
     content: () => (
       <>
         <p className="text-[var(--fg-2)] leading-relaxed mb-6">
-          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">olum-router</code>{" "}
-          maps URL paths to components. Build a{" "}
-          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">config</code>,{" "}
-          create a{" "}
-          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">Router</code>, and pass it to{" "}
-          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">.use()</code>{" "}
-          instead of a root component.
+          Olum uses{" "}
+          <span className="text-[var(--fg)] font-semibold">file-based routing</span> — every route is a folder under{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">src/</code>{" "}
+          and the files inside it declare how that URL renders. There is no route config to maintain: the file tree{" "}
+          <span className="text-[var(--fg)] font-semibold">is</span> the route table.
         </p>
-        <CodeBlock code={ROUTER_SETUP_CODE} filename="main.js" showCopy />
+        <CodeBlock code={ROUTER_STRUCTURE_CODE} filename="Project structure" showCopy />
 
         <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
-          Config options
+          File conventions
         </h2>
         <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-[var(--card)] border-b border-[var(--border)]">
-                <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">Key</th>
-                <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">Value</th>
+                <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">File</th>
                 <th className="text-left px-4 py-2.5 font-mono text-[var(--fg-subtle)] font-semibold">What it does</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-subtle)]">
               <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
-                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">mode</td>
-                <td className="px-4 py-2.5 font-mono text-xs text-[var(--fg-2)]">&quot;history&quot; | &quot;hash&quot;</td>
+                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E] whitespace-nowrap">page.html</td>
                 <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">
-                  <code className="font-mono text-[#25C97E]">history</code> = clean URLs (<code className="font-mono">/about</code>);{" "}
-                  <code className="font-mono text-[#25C97E]">hash</code> = <code className="font-mono">/#/about</code> (no server config needed).
+                  The UI for a route. A folder becomes a navigable route only when it contains a{" "}
+                  <code className="font-mono">page.html</code> — e.g. <code className="font-mono">about/page.html</code> serves{" "}
+                  <code className="font-mono">/about</code>.
                 </td>
               </tr>
               <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
-                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">root</td>
-                <td className="px-4 py-2.5 font-mono text-xs text-[var(--fg-2)]">&quot;/&quot;</td>
-                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">Base path the app is served from. Use a sub-path (e.g. <code className="font-mono">&quot;/app/&quot;</code>) when not at the domain root.</td>
+                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E] whitespace-nowrap">not-found.html</td>
+                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">Rendered when no route matches the current URL — the global 404 page.</td>
               </tr>
               <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
-                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">err</td>
-                <td className="px-4 py-2.5 font-mono text-xs text-[var(--fg-2)]">&quot;/404&quot;</td>
-                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">Path the router redirects to when no route matches. Must exist in <code className="font-mono">routes</code>.</td>
-              </tr>
-              <tr className="bg-[var(--bg)] hover:bg-[var(--card)] transition-colors">
-                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E]">routes</td>
-                <td className="px-4 py-2.5 font-mono text-xs text-[var(--fg-2)]">{"{ path, comp }[]"}</td>
-                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">Each entry maps a URL <code className="font-mono">path</code> to the <code className="font-mono">comp</code> component that renders for it.</td>
+                <td className="px-4 py-2.5 font-mono text-xs text-[#25C97E] whitespace-nowrap">[param]/</td>
+                <td className="px-4 py-2.5 text-xs text-[var(--fg-2)]">
+                  A dynamic segment. <code className="font-mono">blog/[slug]/page.html</code> matches{" "}
+                  <code className="font-mono">/blog/:slug</code>, capturing the URL part as the{" "}
+                  <code className="font-mono">slug</code> param (e.g. <code className="font-mono">/blog/hello</code> →{" "}
+                  <code className="font-mono">slug = &quot;hello&quot;</code>).
+                </td>
               </tr>
             </tbody>
           </table>
@@ -875,11 +871,13 @@ const sections: Record<string, Section> = {
           Rendering the matched route
         </h2>
         <p className="text-[var(--fg-2)] leading-relaxed mb-5">
-          Place a{" "}
+          In your root{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">index.html</code>{" "}
+          shell, place a{" "}
           <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">&lt;router-view&gt;</code>{" "}
-          where the active route&apos;s component should appear — typically inside a layout shell with persistent navigation around it.
+          where the active page should appear — put persistent navigation around it and it stays mounted across route changes.
         </p>
-        <CodeBlock code={ROUTER_VIEW_CODE} filename="Layout.html" showCopy />
+        <CodeBlock code={ROUTER_VIEW_CODE} filename="index.html" showCopy />
 
         <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
           Navigating with <code className="font-mono text-[#25C97E]">link</code>
@@ -889,14 +887,13 @@ const sections: Record<string, Section> = {
           <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">link</code>{" "}
           attribute and the router handles the click as a client-side transition — no full page reload.
         </p>
-        <CodeBlock code={ROUTER_LINK_CODE} filename="Component.html" showCopy />
+        <CodeBlock code={ROUTER_LINK_CODE} filename="src/page.html" showCopy />
         <div className="mt-6 flex gap-4 p-5 rounded-xl bg-[rgba(255,200,0,0.06)] border border-[rgba(255,200,0,0.2)]">
           <span className="text-base mt-0.5">⚠️</span>
           <p className="text-sm text-[var(--fg-2)] leading-relaxed">
-            In <code className="text-[#25C97E] font-mono">history</code> mode the server must fall back to{" "}
-            <code className="text-[#25C97E] font-mono">index.html</code> for unknown paths, otherwise a hard refresh on{" "}
-            <code className="text-[#25C97E] font-mono">/about</code> 404s. <code className="text-[#25C97E] font-mono">hash</code>{" "}
-            mode avoids this entirely.
+            Because routes are resolved on the client, the server must fall back to{" "}
+            <code className="text-[#25C97E] font-mono">index.html</code> for unknown paths — otherwise a hard refresh on a
+            deep route like <code className="text-[#25C97E] font-mono">/blog/hello</code> 404s before the app can match it.
           </p>
         </div>
       </>
