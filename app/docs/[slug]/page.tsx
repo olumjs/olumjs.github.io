@@ -880,6 +880,29 @@ const sections: Record<string, Section> = {
           </table>
         </div>
 
+        <div className="mt-6 flex gap-4 p-5 rounded-xl bg-[rgba(255,200,0,0.06)] border border-[rgba(255,200,0,0.2)]">
+          <span className="text-base mt-0.5">⚠️</span>
+          <p className="text-sm text-[var(--fg-2)] leading-relaxed">
+            These filenames are <strong className="text-[var(--fg)]">case-sensitive</strong>. It must be exactly{" "}
+            <code className="text-[#25C97E] font-mono">page.html</code> and{" "}
+            <code className="text-[#25C97E] font-mono">not-found.html</code> (all lowercase) — variants like{" "}
+            <code className="text-[#25C97E] font-mono">Page.html</code> or{" "}
+            <code className="text-[#25C97E] font-mono">Not-Found.html</code> are not recognized.
+          </p>
+        </div>
+
+        <div className="mt-4 flex gap-4 p-5 rounded-xl bg-[rgba(37,201,126,0.06)] border border-[rgba(37,201,126,0.2)]">
+          <span className="text-xl mt-0.5">💡</span>
+          <p className="text-sm text-[var(--fg-2)] leading-relaxed">
+            Reusable components live in the{" "}
+            <code className="text-[#25C97E] font-mono">src/components</code> directory and their filenames are{" "}
+            <strong className="text-[var(--fg)]">PascalCase</strong> — e.g.{" "}
+            <code className="text-[#25C97E] font-mono">src/components/AddTodo.html</code>. This keeps route files
+            (<code className="text-[#25C97E] font-mono">page.html</code> /{" "}
+            <code className="text-[#25C97E] font-mono">not-found.html</code>) separate from the components they render.
+          </p>
+        </div>
+
         <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
           Reading route params
         </h2>
