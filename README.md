@@ -408,14 +408,38 @@ Import child components (and any JS) in `<script>`. Import a component by its fi
 
 ---
 
-## 18. Escaping & security (summary)
+## 18. Routing & route params
+
+Routing is **file-based**: every folder under `src/` with a `page.html` is a route, and a `[param]` folder is a dynamic segment. Place a `<router-view>` in your shell to render the matched page, and mark anchors with `link` for client-side navigation.
+
+A dynamic segment's value is available in the page component through the `params` object — no config, no wiring. Hitting `/blog/[slug]` exposes the captured segment as `params.slug`, ready to use in `<script>` and the template:
+
+```html
+<!-- src/blog/[slug]/page.html -->
+<script>
+  const { slug } = params;
+</script>
+
+<h1>blog: {slug}</h1>
+```
+
+**History mode & the 404 page:**
+
+- The router uses **history mode by default** (clean URLs like `/blog/hello`). If history mode isn't available it **falls back to hash mode** (`/#/blog/hello`).
+- Add a `not-found.html` at the **root of your project's `src/` directory** and it becomes the default 404 page, rendered whenever no route matches.
+
+> **Limitation — deeply nested dynamic segments.** A single dynamic segment like `/blog/[slug]` works. Chaining multiple dynamic segments in one path — e.g. `/user/[id]/[name]` — is **not tested yet** and may not resolve correctly. Stick to one dynamic segment per route for now.
+
+---
+
+## 19. Escaping & security (summary)
 
 - **Default:** every text/attribute `{expr}` is HTML-escaped via `olum.esc` (prevents XSS and "special characters break the page" bugs).
 - **Opt out** (trusted HTML only): `html="expr"` (element) or `olum.html(value)` (inline). Both are the deliberate, greppable bypass.
 
 ---
 
-## 19. Not supported / common mistakes
+## 20. Not supported / common mistakes
 
 OlumJS intentionally has **no naked braces** and **one way** to do each thing. These do **not** work:
 
@@ -436,7 +460,7 @@ OlumJS intentionally has **no naked braces** and **one way** to do each thing. T
 
 ---
 
-## 20. Quick reference
+## 21. Quick reference
 
 ```html
 <!-- TEXT (auto-escaped) -->
@@ -473,6 +497,47 @@ OlumJS intentionally has **no naked braces** and **one way** to do each thing. T
   <span>slot content → {children}</span>
 </Card>
 ```
+
+---
+
+## 22. Limitations
+
+A few rough edges to be aware of today — each has a workaround by design.
+
+**1. Re-renders rebuild the whole stateful component.** When a component has `state` and it changes, Olum rebuilds that entire component **including its inner child components**. Any live DOM state Olum doesn't track is lost in the rebuild: a playing `<video>` restarts, a running animation resets, and focused/typed-in form inputs lose their value and focus.
+
+> **Avoid it by design:** keep the reactive `state` **outside** the component that holds the video / animation / form inputs. If that media component stays stateless, it never re-renders and its DOM state is preserved.
+
+```html
+<!-- ✗ state inside the media component → re-render restarts the video -->
+<!-- MediaBox.html -->
+<script>
+  const state = { count: 0 };
+  const inc = () => state.count++;
+</script>
+<video src="/clip.mp4" controls></video>
+<button onclick="inc()">{state.count}</button>
+
+<!-- ✓ lift state to the parent; keep the media component stateless -->
+<!-- Parent.html -->
+<script>
+  const state = { count: 0 };
+  const inc = () => state.count++;
+</script>
+<MediaBox />
+<button onclick="inc()">{state.count}</button>
+```
+
+**2. No integrated unit testing.** There is no testing framework wired into OlumJS yet — no built-in runner or component testing utilities.
+
+**3. Global store ergonomics.** There is already a global store across the whole app, plus the scope system (private/public attributes on the `<script>` tag) for exposing props/methods. It's a little awkward, though: a registered component's name isn't straightforward, so you reach it through its location key — e.g. `olum.app.store["page>App#0"]`.
+
+> **For now:** use a single dedicated component for your store, put your props/methods in it, and access it by its location key:
+>
+> ```js
+> olum.app.store["page>App#0"].user;
+> olum.app.store["page>App#0"].login();
+> ```
 
 ---
 

@@ -8,7 +8,6 @@ export const sidebarGroups: SidebarGroup[] = [
       { label: "Introduction", href: "/docs" },
       { label: "Get Started", href: "/docs/get-started" },
       { label: "Component File Structure", href: "/docs/component-structure" },
-      { label: "Bootstrapping an App", href: "/docs/bootstrap" },
     ],
   },
   {
@@ -53,6 +52,7 @@ export const sidebarGroups: SidebarGroup[] = [
       { label: "Lifecycle Hooks", href: "/docs/lifecycle" },
       { label: "Escaping & Security", href: "/docs/security" },
       { label: "Common Mistakes", href: "/docs/common-mistakes" },
+      { label: "Limitations", href: "/docs/limitations" },
       { label: "Quick Reference", href: "/docs/quick-reference" },
     ],
   },
@@ -70,7 +70,6 @@ export const docOrder = [
   "/docs",
   "/docs/get-started",
   "/docs/component-structure",
-  "/docs/bootstrap",
   "/docs/state",
   "/docs/text-interpolation",
   "/docs/watchers",
@@ -90,5 +89,6 @@ export const docOrder = [
   "/docs/lifecycle",
   "/docs/security",
   "/docs/common-mistakes",
+  "/docs/limitations",
   "/docs/quick-reference",
 ];

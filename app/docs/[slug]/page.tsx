@@ -25,17 +25,7 @@ const COMPONENT_STRUCTURE_CODE = `<!-- Counter.html -->
   <button onclick="inc()">+</button>
 </div>`;
 
-const BOOTSTRAP_MAIN_CODE = `// main.js
-import Olum from "olum";
-import App from "./App.js"; // the compiled output of App.html
-
-new Olum().$("#app").use(App);`;
-
-const BOOTSTRAP_HTML_CODE = `<!-- index.html -->
-<div id="app"></div>
-<script type="module" src="/main.js"></script>`;
-
-const STATE_CODE = `<script>
+const STATE_CODE =`<script>
   const state = { count: 0, user: { name: "Ann" } };
 
   const inc = () => state.count++;                 // reassign / mutate → re-render
@@ -171,7 +161,14 @@ const ROUTER_STRUCTURE_CODE = `src/
 │   └── [id]/
 │       └── page.html         → /users/:id`;
 
-const ROUTER_VIEW_CODE = `<!-- index.html -->
+const ROUTER_PARAMS_CODE = `<!-- src/blog/[slug]/page.html -->
+<script>
+  const { slug } = params;
+</script>
+
+<h1>blog: {slug}</h1>`;
+
+const ROUTER_VIEW_CODE =`<!-- index.html -->
 <!-- The matched route's page renders wherever you place <router-view>. -->
 <nav>
   <a href="/" link>Home</a>
@@ -292,6 +289,38 @@ const QUICK_REF_CODE = `<!-- TEXT (auto-escaped) -->
   <span>slot content → {children}</span>
 </Card>`;
 
+const LIMITATION_DOM_CODE = `<!-- ✗ State lives INSIDE the media/input component.
+     Any re-render rebuilds it, so the <video> restarts,
+     the animation resets, and typed-in inputs lose value/focus. -->
+<!-- MediaBox.html -->
+<script>
+  const state = { count: 0 };          // mutating this re-renders MediaBox
+  const inc = () => state.count++;
+</script>
+<video src="/clip.mp4" controls></video>
+<button onclick="inc()">{state.count}</button>
+
+<!-- ✓ Lift the state OUT to a parent, keep the media/input
+     component stateless so it never re-renders. -->
+<!-- Parent.html -->
+<script>
+  const state = { count: 0 };          // re-renders the counter, not the video
+  const inc = () => state.count++;
+</script>
+<MediaBox />                           <!-- stateless → the <video> is safe -->
+<button onclick="inc()">{state.count}</button>`;
+
+const LIMITATION_STORE_CODE = `<!-- A dedicated store component that exposes its props/methods -->
+<!-- App.html (mounted at src/page.html) -->
+<script public>
+  const user = { name: "Ann" };
+  const login = () => { /* … */ };
+</script>
+
+// Access it elsewhere by its registered location key:
+olum.app.store["page>App#0"].user;
+olum.app.store["page>App#0"].login();`;
+
 const commonMistakes = [
   { wrong: 'when={x} / each={x}', right: 'when="x" / each="x"', why: 'values live in ""' },
   { wrong: "value={state.x}", right: 'value="{state.x}"', why: "string attr + {}" },
@@ -373,22 +402,6 @@ const sections: Record<string, Section> = {
             </span>
           </li>
         </ul>
-      </>
-    ),
-  },
-
-  bootstrap: {
-    title: "Bootstrapping an App",
-    group: "Getting Started",
-    content: () => (
-      <>
-        <p className="text-[var(--fg-2)] leading-relaxed mb-6">
-          Import the framework and your root component, then mount it onto a DOM node.
-        </p>
-        <div className="space-y-4">
-          <CodeBlock code={BOOTSTRAP_MAIN_CODE} filename="main.js" showCopy />
-          <CodeBlock code={BOOTSTRAP_HTML_CODE} filename="index.html" showCopy />
-        </div>
       </>
     ),
   },
@@ -868,6 +881,20 @@ const sections: Record<string, Section> = {
         </div>
 
         <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          Reading route params
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          A dynamic segment&apos;s value is available in the page component through the{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">params</code>{" "}
+          object — no config, no wiring. Hitting{" "}
+          <code className="text-[#25C97E] font-mono">/blog/[slug]</code> exposes the captured segment as{" "}
+          <code className="text-[#25C97E] font-mono">params.slug</code>, ready to use in{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">&lt;script&gt;</code>{" "}
+          and the template:
+        </p>
+        <CodeBlock code={ROUTER_PARAMS_CODE} filename="src/blog/[slug]/page.html" showCopy />
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
           Rendering the matched route
         </h2>
         <p className="text-[var(--fg-2)] leading-relaxed mb-5">
@@ -894,6 +921,41 @@ const sections: Record<string, Section> = {
             Because routes are resolved on the client, the server must fall back to{" "}
             <code className="text-[#25C97E] font-mono">index.html</code> for unknown paths — otherwise a hard refresh on a
             deep route like <code className="text-[#25C97E] font-mono">/blog/hello</code> 404s before the app can match it.
+          </p>
+        </div>
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          History mode &amp; the 404 page
+        </h2>
+        <ul className="space-y-3 text-sm text-[var(--fg-2)] mb-5">
+          <li className="flex items-start gap-3">
+            <span className="mt-1.5 w-1 h-1 rounded-full bg-[#25C97E] shrink-0" />
+            <span>
+              The router uses <strong className="text-[var(--fg)]">history mode by default</strong> (clean URLs like{" "}
+              <code className="text-[#25C97E] font-mono">/blog/hello</code>). If history mode isn&apos;t available it{" "}
+              <strong className="text-[var(--fg)]">falls back to hash mode</strong> (<code className="text-[#25C97E] font-mono">/#/blog/hello</code>).
+            </span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="mt-1.5 w-1 h-1 rounded-full bg-[#25C97E] shrink-0" />
+            <span>
+              Add a{" "}
+              <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">not-found.html</code>{" "}
+              at the <strong className="text-[var(--fg)]">root of your project&apos;s{" "}
+              <code className="text-[#25C97E] font-mono">src/</code> directory</strong> and it becomes the default 404 page,
+              rendered whenever no route matches.
+            </span>
+          </li>
+        </ul>
+
+        <div className="mt-6 flex gap-4 p-5 rounded-xl bg-[rgba(255,50,50,0.06)] border border-[rgba(255,50,50,0.2)]">
+          <span className="text-base mt-0.5">🚧</span>
+          <p className="text-sm text-[var(--fg-2)] leading-relaxed">
+            <strong className="text-[var(--fg)]">Limitation — deeply nested dynamic segments.</strong> A single dynamic
+            segment like <code className="text-[#25C97E] font-mono">/blog/[slug]</code> works. Chaining multiple dynamic
+            segments in one path — e.g.{" "}
+            <code className="text-[#25C97E] font-mono">/user/[id]/[name]</code> — is <strong className="text-[var(--fg)]">not
+            tested yet</strong> and may not resolve correctly. Stick to one dynamic segment per route for now.
           </p>
         </div>
       </>
@@ -1014,6 +1076,69 @@ const sections: Record<string, Section> = {
             </tbody>
           </table>
         </div>
+      </>
+    ),
+  },
+
+  limitations: {
+    title: "Limitations",
+    group: "Advanced",
+    content: () => (
+      <>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-8">
+          OlumJS is deliberately small, and a few rough edges come with that. Here&apos;s what to
+          watch for today — each has a straightforward workaround by design.
+        </p>
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3" style={{ fontFamily: "var(--font-syne)" }}>
+          1. Re-renders rebuild the whole stateful component
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          When a component has <code className="text-[#25C97E] font-mono">state</code> and it changes,
+          Olum rebuilds that <strong className="text-[var(--fg)]">entire target component — including
+          its inner child components</strong>. Any live DOM state that Olum doesn&apos;t track is lost
+          in the rebuild: a playing{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">&lt;video&gt;</code>{" "}
+          restarts, a running animation resets, and focused/typed-in{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">form</code>{" "}
+          inputs lose their value and focus.
+        </p>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          <strong className="text-[var(--fg)]">Avoid it by design:</strong> keep the reactive{" "}
+          <code className="text-[#25C97E] font-mono">state</code> <strong className="text-[var(--fg)]">outside</strong>{" "}
+          the component that holds the video / animation / form inputs. If that media component stays
+          stateless, it never re-renders and its DOM state is preserved.
+        </p>
+        <CodeBlock code={LIMITATION_DOM_CODE} filename="lift-state.html" showCopy />
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          2. No integrated unit testing
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          There is no testing framework wired into OlumJS yet — no built-in test runner or component
+          testing utilities. You can still test plain JS logic with any external tool, but there&apos;s
+          no first-class story for testing components at the moment.
+        </p>
+
+        <h2 className="text-xl font-semibold text-[var(--fg)] mb-3 mt-10" style={{ fontFamily: "var(--font-syne)" }}>
+          3. Global store ergonomics
+        </h2>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          There is already a <strong className="text-[var(--fg)]">global store across the whole
+          application</strong>, together with the{" "}
+          <Link href="/docs/scope" className="text-[#25C97E] hover:underline">scope system</Link>{" "}
+          (private/public attributes on the{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">&lt;script&gt;</code>{" "}
+          tag) for exposing props/methods. It&apos;s a little awkward in practice, though: a registered
+          component&apos;s name isn&apos;t straightforward, so you reach it through its location key —
+          e.g.{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">{'olum.app.store["page>App#0"]'}</code>.
+        </p>
+        <p className="text-[var(--fg-2)] leading-relaxed mb-5">
+          <strong className="text-[var(--fg)]">For now:</strong> use a single dedicated component for
+          your store, put your props/methods in it, and access it by its location key.
+        </p>
+        <CodeBlock code={LIMITATION_STORE_CODE} filename="store.html" showCopy />
       </>
     ),
   },
