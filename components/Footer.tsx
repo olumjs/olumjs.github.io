@@ -83,6 +83,38 @@ export default function Footer() {
           ))}
         </div>
 
+        <div className="mt-12 pt-8 border-t border-[var(--border-subtle)]">
+          <div className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:justify-between">
+            {/* Radial glow */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "radial-gradient(ellipse 60% 100% at 0% 50%, var(--glow), transparent)" }}
+            />
+            <div className="relative flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[rgba(37,201,126,0.1)] border border-[rgba(37,201,126,0.2)] flex items-center justify-center">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#25C97E">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[var(--fg)]" style={{ fontFamily: "var(--font-syne)" }}>
+                  Sponsor Olum
+                </h3>
+                <p className="text-sm text-[var(--fg-muted)] leading-relaxed">Help keep Olum free and open source.</p>
+              </div>
+            </div>
+            <a
+              href="https://github.com/sponsors/olumjs"
+              className="relative flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-[#25C97E] rounded-xl hover:opacity-90 hover:scale-[1.02] transition-all duration-200 shadow-[0_0_40px_rgba(37,201,126,0.25)]"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+              Sponsor
+            </a>
+          </div>
+        </div>
+
         <div className="mt-12 pt-8 border-t border-[var(--border-subtle)] flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-[var(--fg-subtle)]">© {new Date().getFullYear()} Olum contributors. MIT License.</p>
           <div className="flex items-center gap-1 text-sm text-[var(--fg-subtle)]">
