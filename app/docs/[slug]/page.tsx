@@ -28,7 +28,7 @@ const COMPONENT_STRUCTURE_CODE = `<!-- Counter.html -->
 const STATE_CODE =`<script>
   const state = { count: 0, user: { name: "Ann" } };
 
-  const inc = () => state.count++;                 // reassign / mutate → re-render
+  const inc = () => state.count++; // reassign / mutate → re-render
   const rename = () => (state.user = { name: "Bo" });
 </script>
 
@@ -202,8 +202,9 @@ const PROPS_RULE_CODE = `<Comp
 
 const PROPS_CHILD_CODE = `<!-- StatusBadge.html -->
 <script>
+  import { onMount } from "olum";
   // props.label, props.color
-  const mounted = () => console.log(props.label);
+  onMount(() => console.log(props.label));
 </script>
 <span class="badge" style="color:{props.color}">{props.label}</span>`;
 
@@ -241,8 +242,14 @@ const WATCHERS_CODE = `<script>
 <p>{state.count} — {state.log}</p>`;
 
 const LIFECYCLE_CODE = `<script>
-  const mounted   = () => console.log("mounted ✓");
-  const unMounted = () => console.log("removed from DOM");
+  import { onMount } from "olum";
+
+  onMount(() => {
+    console.log("mounted");
+    return () => {
+      console.log("unMounted");
+    };
+  });
 </script>`;
 
 const SCOPED_CSS_CODE = `<style>
@@ -294,7 +301,7 @@ const LIMITATION_DOM_CODE = `<!-- ✗ State lives INSIDE the media/input compone
      the animation resets, and typed-in inputs lose value/focus. -->
 <!-- MediaBox.html -->
 <script>
-  const state = { count: 0 };          // mutating this re-renders MediaBox
+  const state = { count: 0 }; // mutating this re-renders MediaBox
   const inc = () => state.count++;
 </script>
 <video src="/clip.mp4" controls></video>
@@ -304,7 +311,7 @@ const LIMITATION_DOM_CODE = `<!-- ✗ State lives INSIDE the media/input compone
      component stateless so it never re-renders. -->
 <!-- Parent.html -->
 <script>
-  const state = { count: 0 };          // re-renders the counter, not the video
+  const state = { count: 0 }; // re-renders the counter, not the video
   const inc = () => state.count++;
 </script>
 <MediaBox />                           <!-- stateless → the <video> is safe -->
@@ -991,24 +998,25 @@ const sections: Record<string, Section> = {
     content: () => (
       <>
         <p className="text-[var(--fg-2)] leading-relaxed mb-6">
-          Declare{" "}
-          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">mounted</code>{" "}
-          and/or{" "}
-          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">unMounted</code>{" "}
-          (note the capital <strong className="text-[var(--fg)]">M</strong>).
+          Import{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">onMount</code>{" "}
+          from{" "}
+          <code className="text-[#25C97E] bg-[rgba(37,201,126,0.08)] px-1.5 py-0.5 rounded font-mono text-sm">olum</code>{" "}
+          and call it with a callback. The callback runs when the component mounts; return a function from it to run cleanup on unmount.
         </p>
         <CodeBlock code={LIFECYCLE_CODE} filename="Component.html" showCopy />
         <ul className="mt-6 space-y-3 text-sm text-[var(--fg-2)]">
           <li className="flex items-start gap-3">
             <span className="mt-1.5 w-1 h-1 rounded-full bg-[#25C97E] shrink-0" />
             <span>
-              <code className="text-[#25C97E] font-mono">mounted</code> runs when the component is inserted into the DOM.
+              The{" "}
+              <code className="text-[#25C97E] font-mono">onMount</code> callback runs when the component is inserted into the DOM.
             </span>
           </li>
           <li className="flex items-start gap-3">
             <span className="mt-1.5 w-1 h-1 rounded-full bg-[#25C97E] shrink-0" />
             <span>
-              <code className="text-[#25C97E] font-mono">unMounted</code> runs when it&apos;s removed (e.g. an{" "}
+              The <strong className="text-[var(--fg)]">returned cleanup function</strong> runs when it&apos;s removed (e.g. an{" "}
               <code className="text-[#25C97E] font-mono">&lt;if&gt;</code> toggles it off, or a keyed list item is removed).
             </span>
           </li>

@@ -8,7 +8,8 @@ interface CodeBlockProps {
   showCopy?: boolean;
 }
 
-export function CodeBlock({ code, filename, showCopy = true }: CodeBlockProps) {
+export function CodeBlock({ code, filename, lang, showCopy = true }: CodeBlockProps) {
+  const language = lang ?? (filename?.toLowerCase().endsWith(".html") ? "html" : undefined);
   return (
     <div className="rounded-xl overflow-hidden border border-[#27272a] bg-[#000000]">
       {/* Chrome bar */}
@@ -28,7 +29,7 @@ export function CodeBlock({ code, filename, showCopy = true }: CodeBlockProps) {
       {/* Code */}
       <div className="overflow-x-auto p-5">
         <pre className="font-mono text-sm leading-6 text-[#e2e8f0]">
-          <Highlight code={code} />
+          <Highlight code={code} lang={language} />
         </pre>
       </div>
     </div>
