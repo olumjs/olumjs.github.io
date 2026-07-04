@@ -3,6 +3,7 @@ import Link from "next/link";
 import DocsSidebar from "@/components/DocsSidebar";
 import Footer from "@/components/Footer";
 import { getDocsNav } from "@/lib/docs-content";
+import { slugify } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Docs — OlumJS" };
 
@@ -11,6 +12,10 @@ const buckets = [
   { bucket: "String", attrs: "class, style, title, href, id, props, …", inside: "a literal string; {expr} interpolates dynamics" },
   { bucket: "Text", attrs: "element text content", inside: "{expr}, auto-escaped" },
 ];
+
+// Section headings on this page — single source of truth for the anchors and
+// the "On this page" table of contents (ids are derived, never hardcoded).
+const sections = ["The one rule", "Where to go next"];
 
 const nextSteps = [
   { label: "Get Started", href: "/docs/get-started", desc: "Scaffold your first OlumJS app in one command.", icon: "🚀" },
@@ -64,12 +69,12 @@ export default async function DocsPage() {
               <div className="h-px bg-[var(--border-subtle)] mb-10" />
 
               {/* The one rule */}
-              <section className="mb-12">
+              <section id={slugify(sections[0])} className="mb-12 scroll-mt-24">
                 <h2
                   className="text-2xl font-bold text-[var(--fg)] mb-4"
                   style={{ fontFamily: "var(--font-syne)" }}
                 >
-                  The one rule
+                  {sections[0]}
                 </h2>
                 <div className="flex gap-4 p-5 rounded-xl bg-[rgba(37,201,126,0.06)] border border-[rgba(37,201,126,0.2)] mb-6">
                   <span className="text-xl mt-0.5">💡</span>
@@ -110,12 +115,12 @@ export default async function DocsPage() {
               </section>
 
               {/* Next steps */}
-              <section>
+              <section id={slugify(sections[1])} className="scroll-mt-24">
                 <h2
                   className="text-2xl font-bold text-[var(--fg)] mb-6"
                   style={{ fontFamily: "var(--font-syne)" }}
                 >
-                  Where to go next
+                  {sections[1]}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {nextSteps.map((card) => (
@@ -158,13 +163,13 @@ export default async function DocsPage() {
                 On this page
               </h4>
               <nav className="space-y-0.5">
-                {["The one rule", "Where to go next"].map((item) => (
+                {sections.map((title) => (
                   <a
-                    key={item}
-                    href="#"
+                    key={title}
+                    href={`#${slugify(title)}`}
                     className="block text-xs text-[var(--fg-subtle)] hover:text-[#25C97E] py-0.5 transition-colors"
                   >
-                    {item}
+                    {title}
                   </a>
                 ))}
               </nav>

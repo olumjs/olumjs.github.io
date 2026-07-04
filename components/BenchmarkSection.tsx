@@ -72,7 +72,7 @@ const ecosystem = [
     name: "VS Code Extension",
     tag: "IDE",
     description: "Syntax highlighting, IntelliSense, auto-imports, and inline signal previews for `.olum` single-file components.",
-    links: [{ label: "Marketplace", href: "#" }, { label: "JetBrains", href: "#" }],
+    links: [{ label: "VSC Marketplace", href: "https://marketplace.visualstudio.com/items?itemName=eissapk.olum" }, { label: "VSX Marketplace", href: "https://open-vsx.org/extension/eissapk/olum" }],
     accent: "#25C97E",
   },
   {

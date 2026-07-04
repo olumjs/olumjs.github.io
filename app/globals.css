@@ -264,6 +264,7 @@ code span::selection { background: rgba(37,201,126,0.35) !important; color: #e2e
   color: var(--fg);
   margin-top: 2.5rem;
   margin-bottom: 0.75rem;
+  scroll-margin-top: 6rem;
 }
 .docs-md h3 {
   font-family: var(--font-syne);
