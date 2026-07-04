@@ -7,7 +7,16 @@ import { cache } from "react";
 // export / GitHub Pages).
 // The sidebar renders one section per repo, in THIS order. Reorder to reorder
 // the menu. `olum` → "core"; `olum-x` → "x" (see repoLabel).
-export const DOC_REPOS = ["olumjs/olum", "olumjs/olum-router"];
+export const DOC_REPOS = [
+  {
+    repo: "olumjs/olum",
+    minVer: "v0.5.5",
+  },
+  {
+    repo: "olumjs/olum-router",
+    minVer: "v0.3.1",
+  },
+];
 
 // Cache tag shared by every GitHub fetch below; /api/clear-cache invalidates it.
 export const DOCS_TAG = "docs";
@@ -32,14 +41,31 @@ export interface Doc {
   editUrl: string; // GitHub blob URL for the source file
 }
 
-export type SidebarItem = { label: string; href: string };
-export type SidebarGroup = { label: string; items: SidebarItem[] };
+export type SidebarItem = { label: string; href: string; fixed?: boolean };
+export type SidebarGroup = {
+  label: string;
+  items: SidebarItem[];
+  repo?: string; // "olumjs/olum" — sections backed by a repo get a branch dropdown
+  defaultBranch?: string; // the repo's default branch (initially selected)
+  branches?: string[]; // all branch names, for the version dropdown
+};
+
+// A doc's identity within a branch — used by the sidebar's file list.
+export interface DocMeta {
+  slug: string;
+  title: string;
+  order: number;
+}
 
 interface GhContentItem {
   name: string;
   type: string;
   download_url: string | null;
   html_url: string;
+}
+
+function isDocFile(it: GhContentItem): boolean {
+  return it.type === "file" && it.name.endsWith(".md") && it.name.toLowerCase() !== "readme.md";
 }
 
 // ── Static (non-repo) docs ──────────────────────────────────────────────────
@@ -81,24 +107,143 @@ function ghHeaders(): HeadersInit {
   return h;
 }
 
-async function fetchDocsDir(repo: string): Promise<GhContentItem[]> {
+// Thrown when a branch simply has no `docs/` folder — a normal "no docs here"
+// state (not an error), handled gracefully by the per-branch loaders.
+class DocsDirNotFound extends Error {}
+
+async function fetchDocsDir(repo: string, ref?: string): Promise<GhContentItem[]> {
   // No `ref` → GitHub serves the repo's default branch automatically.
-  const res = await fetch(`https://api.github.com/repos/${repo}/contents/docs`, {
+  const url = ref
+    ? `https://api.github.com/repos/${repo}/contents/docs?ref=${encodeURIComponent(ref)}`
+    : `https://api.github.com/repos/${repo}/contents/docs`;
+  const res = await fetch(url, {
     headers: ghHeaders(),
     next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] },
   });
   if (!res.ok) {
-    throw new Error(`Failed to list ${repo}/docs: ${res.status} ${res.statusText}`);
+    if (res.status === 404) throw new DocsDirNotFound(`No docs dir on ${repo}${ref ? `@${ref}` : ""}`);
+    throw new Error(`Failed to list ${repo}/docs${ref ? `@${ref}` : ""}: ${res.status} ${res.statusText}`);
   }
   return res.json();
 }
 
-// The branch the contents API served (the repo's default branch, since we pass
-// no `ref`) is encoded in the raw download URL: .../{owner}/{repo}/{branch}/...
-function branchFromDownloadUrl(url: string, repo: string): string {
-  const path = new URL(url).pathname; // /owner/repo/<branch>/docs/file.md
-  const rest = path.startsWith(`/${repo}/`) ? path.slice(repo.length + 2) : path.replace(/^\//, "");
-  return rest.split("/")[0] || "unknown";
+function fetchRaw(url: string, label: string): Promise<string> {
+  return fetch(url, { next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] } }).then((r) => {
+    if (!r.ok) throw new Error(`Failed to fetch ${label}: ${r.status}`);
+    return r.text();
+  });
+}
+
+// Compare version-like branch names numerically, so "v0.5.10" > "v0.5.9"
+// (a plain string sort gets this wrong). Names with no numeric part (e.g.
+// "main", "dev") sort below versioned ones. Positive result → `a` is newer.
+export function compareVersions(a: string, b: string): number {
+  const parse = (s: string) =>
+    s
+      .match(/\d+(?:\.\d+)*/)?.[0]
+      .split(".")
+      .map(Number) ?? null;
+  const pa = parse(a);
+  const pb = parse(b);
+  if (!pa && !pb) return a.localeCompare(b);
+  if (!pa) return -1;
+  if (!pb) return 1;
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (diff) return diff;
+  }
+  return 0;
+}
+
+// This repo's configured minimum version, or "" if it isn't one we serve.
+function minVerFor(repo: string): string {
+  return DOC_REPOS.find((r) => r.repo === repo)?.minVer ?? "";
+}
+
+// Whether `repo` is one we serve.
+export function isRepoAllowed(repo: string): boolean {
+  return DOC_REPOS.some((r) => r.repo === repo);
+}
+
+// Whether a branch meets that repo's `minVer` floor.
+export function isVersionAllowed(repo: string, branch: string): boolean {
+  const min = minVerFor(repo);
+  return !min || compareVersions(branch, min) >= 0;
+}
+
+// All branch names for a repo (for the version dropdown).
+export const getBranches = cache(async (repo: string): Promise<string[]> => {
+  const res = await fetch(`https://api.github.com/repos/${repo}/branches?per_page=100`, {
+    headers: ghHeaders(),
+    next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] },
+  });
+  if (!res.ok) throw new Error(`Failed to list branches for ${repo}: ${res.status} ${res.statusText}`);
+  const data: { name: string }[] = await res.json();
+  return data.map((b) => b.name);
+});
+
+// Per-repo: branches (newest → oldest) and `latest` = the newest branch that
+// actually has a docs/ folder. That's the version selected by default, so users
+// land on the latest available docs (a newer branch without docs is skipped).
+export const getRepoMeta = cache(async (repo: string): Promise<{ branches: string[]; latest: string }> => {
+  const branches = (await getBranches(repo)).filter((b) => isVersionAllowed(repo, b)).sort((a, b) => compareVersions(b, a));
+  for (const branch of branches) {
+    try {
+      await fetchDocsDir(repo, branch); // resolves only if the branch has docs/
+      return { branches, latest: branch };
+    } catch (e) {
+      if (e instanceof DocsDirNotFound) continue; // skip to the next-newest branch
+      throw e; // real failure (rate limit, network) — surface it
+    }
+  }
+  return { branches, latest: branches[0] ?? "" }; // no branch had docs (unlikely)
+});
+
+// The docs (slug/title/order) of a repo on a specific branch — the sidebar's
+// file list after a version is picked.
+export async function getRepoDocMetas(repo: string, ref: string): Promise<DocMeta[]> {
+  if (!isVersionAllowed(repo, ref)) return []; // below the version floor → not served
+  let items: GhContentItem[];
+  try {
+    items = await fetchDocsDir(repo, ref);
+  } catch (e) {
+    if (e instanceof DocsDirNotFound) return []; // branch has no docs/ → empty list
+    throw e;
+  }
+  const metas = await Promise.all(
+    items.filter(isDocFile).map(async (file): Promise<DocMeta> => {
+      const raw = await fetchRaw(file.download_url!, `${repo}/docs/${file.name}@${ref}`);
+      const { data } = parseFrontmatter(raw);
+      const slug = file.name.replace(/\.md$/, "");
+      return { slug, title: data.title || slug, order: Number(data.order) || 0 };
+    })
+  );
+  return metas.sort((a, b) => a.order - b.order);
+}
+
+// A single doc from a specific repo + branch (for the versioned doc page).
+export async function getDocAt(repo: string, ref: string, slug: string): Promise<Doc | null> {
+  if (!isVersionAllowed(repo, ref)) return null; // below the version floor → 404
+  let items: GhContentItem[];
+  try {
+    items = await fetchDocsDir(repo, ref);
+  } catch (e) {
+    if (e instanceof DocsDirNotFound) return null; // branch has no docs/ → 404
+    throw e;
+  }
+  const file = items.find((it) => isDocFile(it) && it.name === `${slug}.md`);
+  if (!file?.download_url) return null;
+  const raw = await fetchRaw(file.download_url, `${repo}/docs/${file.name}@${ref}`);
+  const { data, body } = parseFrontmatter(raw);
+  return {
+    slug,
+    repo,
+    title: data.title || slug,
+    group: data.group || "Docs",
+    order: Number(data.order) || 0,
+    body,
+    editUrl: file.html_url,
+  };
 }
 
 // ── Frontmatter ─────────────────────────────────────────────────────────────
@@ -110,7 +255,10 @@ function parseFrontmatter(raw: string): { data: Record<string, string>; body: st
     const i = line.indexOf(":");
     if (i === -1) continue;
     const key = line.slice(0, i).trim();
-    const val = line.slice(i + 1).trim().replace(/^["']|["']$/g, "");
+    const val = line
+      .slice(i + 1)
+      .trim()
+      .replace(/^["']|["']$/g, "");
     if (key) data[key] = val;
   }
   return { data, body: raw.slice(m[0].length) };
@@ -119,23 +267,14 @@ function parseFrontmatter(raw: string): { data: Record<string, string>; body: st
 // ── Loaders (cached per build/request) ──────────────────────────────────────
 export const getAllDocs = cache(async (): Promise<Doc[]> => {
   const perRepo = await Promise.all(
-    DOC_REPOS.map(async (repo) => {
-      const items = await fetchDocsDir(repo);
-      const mdFiles = items.filter(
-        (it) => it.type === "file" && it.name.endsWith(".md") && it.name.toLowerCase() !== "readme.md"
-      );
-      const branch = mdFiles[0]?.download_url
-        ? branchFromDownloadUrl(mdFiles[0].download_url, repo)
-        : "unknown";
-      console.log(`[docs] ${repo} @ ${branch} — ${mdFiles.length} file(s)`);
+    DOC_REPOS.map(async ({ repo }) => {
+      const { latest } = await getRepoMeta(repo);
+      const items = await fetchDocsDir(repo, latest); // cache hit — probed by getRepoMeta
+      const mdFiles = items.filter(isDocFile);
+      console.log(`[docs] ${repo} @ ${latest} (latest) — ${mdFiles.length} file(s)`);
       return Promise.all(
         mdFiles.map(async (file): Promise<Doc> => {
-          const raw = await fetch(file.download_url!, {
-            next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] },
-          }).then((r) => {
-            if (!r.ok) throw new Error(`Failed to fetch ${repo}/docs/${file.name}: ${r.status}`);
-            return r.text();
-          });
+          const raw = await fetchRaw(file.download_url!, `${repo}/docs/${file.name}@${latest}`);
           const { data, body } = parseFrontmatter(raw);
           const slug = file.name.replace(/\.md$/, "");
           return {
@@ -181,19 +320,28 @@ export const getDocsNav = cache(async (): Promise<SidebarGroup[]> => {
     else byRepo.set(d.repo, [d]);
   }
 
-  const groups: SidebarGroup[] = DOC_REPOS.filter((repo) => byRepo.has(repo)).map((repo) => ({
-    label: repoLabel(repo),
-    items: byRepo
-      .get(repo)!
-      .sort((a, b) => a.order - b.order)
-      .map((d) => ({ label: d.title, href: `/docs/${d.slug}` })),
-  }));
+  const groups: SidebarGroup[] = await Promise.all(
+    DOC_REPOS.filter(({ repo }) => byRepo.has(repo)).map(async ({ repo }): Promise<SidebarGroup> => {
+      const { branches, latest } = await getRepoMeta(repo); // cached
+      return {
+        label: repoLabel(repo),
+        repo,
+        defaultBranch: latest, // newest branch with docs → selected by default
+        branches,
+        items: byRepo
+          .get(repo)!
+          .sort((a, b) => a.order - b.order)
+          .map((d) => ({ label: d.title, href: `/docs/${d.slug}` })),
+      };
+    })
+  );
 
   // Fixed items pinned to the top of the first section: Introduction (/docs)
-  // and the hardcoded static docs (Get Started).
+  // and the hardcoded static docs (Get Started). `fixed` keeps the sidebar from
+  // replacing them when a branch is picked.
   const pinned: SidebarItem[] = [
-    { label: "Introduction", href: "/docs" },
-    ...STATIC_DOCS.map((d) => ({ label: d.title, href: `/docs/${d.slug}` })),
+    { label: "Introduction", href: "/docs", fixed: true },
+    ...STATIC_DOCS.map((d) => ({ label: d.title, href: `/docs/${d.slug}`, fixed: true })),
   ];
   if (groups.length) groups[0].items.unshift(...pinned);
   else groups.push({ label: "core", items: pinned });

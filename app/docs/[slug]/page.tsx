@@ -4,10 +4,25 @@ import Link from "next/link";
 import DocsSidebar from "@/components/DocsSidebar";
 import Footer from "@/components/Footer";
 import { Markdown } from "@/components/Markdown";
-import { getAllDocs, getDoc, getDocOrder, getDocsNav, STATIC_DOCS } from "@/lib/docs-content";
+import {
+  isRepoAllowed,
+  getAllDocs,
+  getDoc,
+  getDocAt,
+  getDocOrder,
+  getDocsNav,
+  STATIC_DOCS,
+} from "@/lib/docs-content";
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ repo?: string; ref?: string }>;
+}
+
+// Resolve the ?repo & ?ref query into a validated version, or null for default.
+function versionFrom(sp: { repo?: string; ref?: string }) {
+  if (sp.repo && sp.ref && isRepoAllowed(sp.repo)) return { repo: sp.repo, ref: sp.ref };
+  return null;
 }
 
 export async function generateStaticParams() {
@@ -37,9 +52,13 @@ async function getPrevNext(slug: string) {
   };
 }
 
-export default async function DocSectionPage({ params }: Props) {
+export default async function DocSectionPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const [doc, groups] = await Promise.all([getDoc(slug), getDocsNav()]);
+  const version = versionFrom(await searchParams);
+  const [doc, groups] = await Promise.all([
+    version ? getDocAt(version.repo, version.ref, slug) : getDoc(slug),
+    getDocsNav(),
+  ]);
   if (!doc) notFound();
 
   const { prev, next } = await getPrevNext(slug);
@@ -48,7 +67,7 @@ export default async function DocSectionPage({ params }: Props) {
     <div className="min-h-screen bg-[var(--bg)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
         <div className="flex gap-8 py-8">
-          <DocsSidebar groups={groups} />
+          <DocsSidebar groups={groups} activeRepo={version?.repo} activeRef={version?.ref} />
 
           <main className="flex-1 min-w-0">
             {/* Breadcrumb */}
