@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import DocsSidebar from "@/components/DocsSidebar";
 import Footer from "@/components/Footer";
+import { getDocsNav } from "@/lib/docs-content";
 
 export const metadata: Metadata = { title: "Docs — OlumJS" };
 
@@ -18,12 +19,13 @@ const nextSteps = [
   { label: "Quick Reference", href: "/docs/quick-reference", desc: "A cheat-sheet of all template syntax.", icon: "📋" },
 ];
 
-export default function DocsPage() {
+export default async function DocsPage() {
+  const groups = await getDocsNav();
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
         <div className="flex gap-8 py-8">
-          <DocsSidebar />
+          <DocsSidebar groups={groups} />
 
           <main className="flex-1 min-w-0">
             {/* Breadcrumb */}

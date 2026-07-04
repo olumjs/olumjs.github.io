@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { siteConfig } from "@/lib/site-config";
-import { sectionMeta } from "@/lib/docs-sections";
+import { getDoc } from "@/lib/docs-content";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -9,9 +9,9 @@ type Props = { params: Promise<{ slug: string }> };
 
 export default async function OgImage({ params }: Props) {
   const { slug } = await params;
-  const meta = sectionMeta[slug];
-  const title = meta?.title ?? "Docs";
-  const group = meta?.group ?? "OlumJS";
+  const doc = await getDoc(slug);
+  const title = doc?.title ?? "Docs";
+  const group = doc?.group ?? "OlumJS";
 
   return new ImageResponse(
     (

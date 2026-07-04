@@ -3,6 +3,7 @@ import { Geist, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import { getDocsNav } from "@/lib/docs-content";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { siteConfig } from "@/lib/site-config";
 
@@ -94,7 +95,8 @@ const websiteSchema = {
   inLanguage: "en",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const navGroups = await getDocsNav();
   return (
     <html
       lang="en"
@@ -115,7 +117,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         <ThemeProvider>
-          <Navbar />
+          <Navbar navGroups={navGroups} />
           {children}
         </ThemeProvider>
         {/* JSON-LD structured data */}

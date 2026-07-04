@@ -1,9 +1,10 @@
 import { siteConfig } from "@/lib/site-config";
-import { docOrder } from "@/lib/docs-sections";
+import { getDocOrder } from "@/lib/docs-content";
 
 const today = new Date().toISOString().split("T")[0];
 
-export function GET() {
+export async function GET() {
+  const docOrder = await getDocOrder();
   const staticRoutes = [
     { url: siteConfig.url, changefreq: "monthly", priority: "1.0", lastmod: today },
   ];

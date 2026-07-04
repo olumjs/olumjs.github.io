@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { sidebarGroups } from "@/lib/docs-sections";
+import type { SidebarGroup } from "@/lib/docs-content";
 
-export default function DocsSidebar() {
+export default function DocsSidebar({ groups }: { groups: SidebarGroup[] }) {
   const pathname = usePathname();
+  const sidebarGroups = groups;
   return (
     <aside className="hidden lg:block w-60 shrink-0">
       <div className="sticky top-24 overflow-y-auto max-h-[calc(100vh-6rem)] pr-2 scrollbar-thin">

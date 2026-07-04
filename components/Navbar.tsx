@@ -1,11 +1,11 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { general } from "@/lib/data";
-import { sidebarGroups } from "@/lib/docs-sections";
+import type { SidebarGroup } from "@/lib/docs-content";
 
 // const versions = [
   // { label: "v2.0", tag: "latest", href: "/docs", current: true },
@@ -121,18 +121,21 @@ const FEATURED_HREFS = new Set([
   "/docs/quick-reference",
 ]);
 
-// Derived from the docs sidebar so every docs route is always searchable
-// (no separate list to keep in sync).
-const SEARCH_LINKS: SearchLink[] = sidebarGroups.flatMap((group) =>
-  group.items.map((item) => ({
-    label: item.label,
-    category: group.label,
-    href: item.href,
-    ...(FEATURED_HREFS.has(item.href) ? { featured: true as const } : {}),
-  }))
-);
+// Derived from the docs sidebar (passed in from the server) so every docs route
+// is always searchable — no separate list to keep in sync.
+function buildSearchLinks(groups: SidebarGroup[]): SearchLink[] {
+  return groups.flatMap((group) =>
+    group.items.map((item) => ({
+      label: item.label,
+      category: group.label,
+      href: item.href,
+      ...(FEATURED_HREFS.has(item.href) ? { featured: true as const } : {}),
+    }))
+  );
+}
 
-function SearchModal({ onClose }: { onClose: () => void }) {
+function SearchModal({ onClose, searchLinks }: { onClose: () => void; searchLinks: SearchLink[] }) {
+  const SEARCH_LINKS = searchLinks;
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -278,10 +281,11 @@ const navLinks = [
   { href: "/docs", label: "Docs" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ navGroups }: { navGroups: SidebarGroup[] }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const searchLinks = useMemo(() => buildSearchLinks(navGroups), [navGroups]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -305,7 +309,7 @@ export default function Navbar() {
 
   return (
     <>
-      {searchOpen && <SearchModal onClose={closeSearch} />}
+      {searchOpen && <SearchModal onClose={closeSearch} searchLinks={searchLinks} />}
 
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "backdrop-blur-2xl border-b border-[var(--border)]" : ""}`}

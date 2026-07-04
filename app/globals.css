@@ -252,3 +252,89 @@ code span::selection { background: rgba(37,201,126,0.35) !important; color: #e2e
 .animate-fade-up, .card-glow {
   transition-property: border-color, box-shadow, transform, opacity;
 }
+
+/* ─── Markdown docs (fetched from repos) ───────────────── */
+.docs-md { color: var(--fg-2); line-height: 1.7; }
+.docs-md > *:first-child { margin-top: 0; }
+
+.docs-md h2 {
+  font-family: var(--font-syne);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+.docs-md h3 {
+  font-family: var(--font-syne);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin-top: 2rem;
+  margin-bottom: 0.6rem;
+}
+.docs-md p { margin-bottom: 1.5rem; }
+.docs-md strong { color: var(--fg); font-weight: 600; }
+.docs-md a { color: #25C97E; text-decoration: none; }
+.docs-md a:hover { text-decoration: underline; }
+
+.docs-md ul, .docs-md ol { margin: 0 0 1.5rem; padding-left: 1.25rem; }
+.docs-md ul { list-style: none; }
+.docs-md ul > li { position: relative; padding-left: 1rem; }
+.docs-md ul > li::before {
+  content: "";
+  position: absolute; left: 0; top: 0.6em;
+  width: 4px; height: 4px; border-radius: 9999px;
+  background: #25C97E;
+}
+.docs-md ol { list-style: decimal; }
+.docs-md li { margin-bottom: 0.4rem; }
+
+/* inline code (block code is rendered by CodeBlock) */
+.docs-md .md-code {
+  color: #25C97E;
+  background: rgba(37,201,126,0.08);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  word-break: break-word;
+}
+
+.docs-md blockquote {
+  border-left: 3px solid var(--border-hover);
+  padding-left: 1rem;
+  color: var(--fg-muted);
+  margin: 0 0 1.5rem;
+}
+
+/* CodeBlock spacing inside markdown flow */
+.docs-md .rounded-xl.overflow-hidden { margin-bottom: 1.5rem; }
+
+/* tables */
+.docs-md table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 0 0 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  display: table;
+}
+.docs-md thead tr { background: var(--card); border-bottom: 1px solid var(--border); }
+.docs-md th {
+  text-align: left;
+  padding: 0.625rem 1rem;
+  font-family: var(--font-mono);
+  color: var(--fg-subtle);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.docs-md td {
+  padding: 0.625rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--fg-2);
+  vertical-align: top;
+}
+.docs-md td .md-code { font-size: 0.78rem; }
