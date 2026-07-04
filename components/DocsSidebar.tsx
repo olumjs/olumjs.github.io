@@ -3,6 +3,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { SidebarGroup, SidebarItem } from "@/lib/docs-content";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
 
 // Per-repo UI state: which branch is picked and the file list for it.
 type SectionState = { branch: string; items: SidebarItem[]; loading: boolean };
@@ -82,18 +89,37 @@ export default function DocsSidebar({
                     {group.label}
                   </h4>
                   {group.branches && group.branches.length > 0 && (
-                    <select
-                      aria-label={`${group.label} version`}
-                      value={st?.branch ?? group.defaultBranch}
-                      onChange={(e) => selectBranch(group, e.target.value)}
-                      className="max-w-[7.5rem] text-[11px] font-mono rounded-md bg-[var(--card)] border border-[var(--border)] text-[var(--fg-2)] px-1.5 py-0.5 outline-none hover:border-[var(--border-hover)] focus:border-[#25C97E] cursor-pointer"
-                    >
-                      {group.branches.map((b) => (
-                        <option key={b} value={b}>
-                          {b}
-                        </option>
-                      ))}
-                    </select>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        aria-label={`${group.label} version`}
+                        className="inline-flex items-center gap-1 max-w-[8rem] text-[11px] font-mono rounded-md bg-[var(--card)] border border-[var(--border)] text-[var(--fg-2)] px-1.5 py-1 outline-none hover:border-[var(--border-hover)] data-[state=open]:border-[#25C97E] cursor-pointer"
+                      >
+                        <span className="truncate">{st?.branch ?? group.defaultBranch}</span>
+                        <svg
+                          width="10"
+                          height="10"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          className="shrink-0 opacity-70"
+                        >
+                          <path d="M3 4.5L6 7.5L9 4.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuRadioGroup
+                          value={st?.branch ?? group.defaultBranch ?? ""}
+                          onValueChange={(v) => selectBranch(group, v)}
+                        >
+                          {group.branches.map((b) => (
+                            <DropdownMenuRadioItem key={b} value={b}>
+                              {b}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                 </div>
                 {st?.loading ? (
