@@ -358,13 +358,13 @@ const sections: Record<string, Section> = {
     content: () => (
       <>
         <p className="text-[var(--fg-2)] leading-relaxed mb-6">
-          Scaffold a new OlumJS project with the official CLI — TypeScript, routing, and a dev server ready out of the box:
+          Scaffold a new OlumJS project with the official CLI — routing, and a dev server ready out of the box:
         </p>
         <CodeBlock code={GET_STARTED_CODE} filename="Terminal" showCopy />
         <div className="mt-6 flex gap-4 p-5 rounded-xl bg-[rgba(37,201,126,0.06)] border border-[rgba(37,201,126,0.2)]">
           <span className="text-xl mt-0.5">💡</span>
           <p className="text-sm text-[var(--fg-2)] leading-relaxed">
-            This scaffolds a full project with TypeScript, file-based routing, and a configured dev server in one command.
+            This scaffolds a full project with file-based routing, and a configured dev server in one command.
           </p>
         </div>
       </>
