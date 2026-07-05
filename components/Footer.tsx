@@ -3,16 +3,16 @@ import Image from "next/image";
 
 const links = {
   Framework: [
-    { label: "Introduction", href: "/docs/#intro" },
-    { label: "Quick Start", href: "/docs/#quick-start" },
-    { label: "Examples", href: "/docs/#examples" },
+    { label: "Introduction", href: "/docs/" },
+    { label: "Quick Start", href: "/docs/quick-reference" },
+    { label: "Examples", href: "https://github.com/olumjs/olum-starter/tree/checklist" },
     // { label: "Changelog", href: "/blog/changlog" },
     // { label: "Roadmap", href: "/roadmap" },
   ],
   Ecosystem: [
-    { label: "Router", href: "router.olumjs.top" },
-    { label: "Extension", href: "vsc.olumjs.top" },
-    { label: "Devtool", href: "devtool.olumjs.top" },
+    { label: "Router", href: "https://github.com/olumjs/olum-router" },
+    { label: "Extension", href: "https://github.com/olumjs/olum-vsc" },
+    { label: "Devtool", href: "https://github.com/olumjs/olum-devtool" },
   ],
   Community: [
     { label: "GitHub", href: "https://github.com/olumjs" },
@@ -21,8 +21,8 @@ const links = {
   ],
   Resources: [
     { label: "Docs", href: "/docs" },
-    { label: "API Reference", href: "/docs/#api" },
-    { label: "Templates", href: "/templates" },
+    { label: "API Reference", href: "/docs" },
+    { label: "Templates", href: "/docs" },
   ],
 };
 

@@ -13,7 +13,7 @@ const ecosystem = [
     name: "Olum Router",
     tag: "official",
     description: "File-based routing with dynamic segments, nested layouts, and async data loading. Zero-config, instant HMR.",
-    links: [{ label: "Docs", href: "/docs" }, { label: "npm", href: "#" }],
+    links: [{ label: "Docs", href: "http://localhost:3000/docs/router" }, { label: "npm", href: "https://www.npmjs.com/package/olum-router" }],
     accent: "#25C97E",
   },
   {
@@ -26,7 +26,7 @@ const ecosystem = [
     name: "Olum DevTools",
     tag: "official",
     description: "Browser extension with component inspector, signal graph explorer, and time-travel debugging built in.",
-    links: [{ label: "Chrome", href: "#" }, { label: "Firefox", href: "#" }],
+    // links: [{ label: "Chrome", href: "#" }, { label: "Firefox", href: "#" }],
     accent: "#25C97E",
   },
   {
@@ -39,7 +39,7 @@ const ecosystem = [
     name: "create-olum",
     tag: "CLI",
     description: "Scaffold a new project in seconds. Choose from starter templates: minimal, full-stack, PWA, or library.",
-    links: [{ label: "npm", href: "#" }, { label: "Guide", href: "/docs" }],
+    links: [{ label: "npm", href: "https://www.npmjs.com/package/create-olum" }, { label: "Guide", href: "/docs/get-started" }],
     accent: "#25C97E",
   },
   {
@@ -53,7 +53,7 @@ const ecosystem = [
     name: "Olum Store",
     tag: "official",
     description: "Ergonomic global state built on the same signal primitives. No boilerplate, no selectors — just reactive stores.",
-    links: [{ label: "Docs", href: "/docs" }, { label: "npm", href: "#" }],
+    // links: [{ label: "Docs", href: "/docs" }, { label: "npm", href: "#" }],
     accent: "#25C97E",
   },
   {
@@ -75,19 +75,19 @@ const ecosystem = [
     links: [{ label: "VSC Marketplace", href: "https://marketplace.visualstudio.com/items?itemName=eissapk.olum" }, { label: "VSX Marketplace", href: "https://open-vsx.org/extension/eissapk/olum" }],
     accent: "#25C97E",
   },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
-      </svg>
-    ),
-    name: "Olum Testing",
-    tag: "official",
-    description: "First-class testing utilities. Mount components, trigger signals, and assert DOM output — all without a browser.",
-    links: [{ label: "Docs", href: "/docs" }, { label: "npm", href: "#" }],
-    accent: "#25C97E",
-  },
+  // {
+  //   icon: (
+  //     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+  //       <circle cx="12" cy="12" r="3" />
+  //       <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+  //     </svg>
+  //   ),
+  //   name: "Olum Testing",
+  //   tag: "official",
+  //   description: "First-class testing utilities. Mount components, trigger signals, and assert DOM output — all without a browser.",
+  //   links: [{ label: "Docs", href: "/docs" }, { label: "npm", href: "#" }],
+  //   accent: "#25C97E",
+  // },
 ];
 
 export default function BenchmarkSection() {
@@ -171,7 +171,7 @@ export default function BenchmarkSection() {
 
               {/* Links */}
               <div className="relative mt-auto flex items-center gap-3 pt-2 border-t border-[var(--border-subtle)]">
-                {item.links.map((link) => (
+                {item.links?.length ? item.links.map((link) => (
                   <a
                     key={link.label}
                     href={link.href}
@@ -182,7 +182,7 @@ export default function BenchmarkSection() {
                   >
                     {link.label} →
                   </a>
-                ))}
+                )): ""}
               </div>
             </div>
           ))}

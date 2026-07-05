@@ -478,6 +478,7 @@ export default function FeatureSection() {
           preview={<TodoApp />}
           defaultView="preview"
           defaultFile="src/App.html"
+          repoUrl="https://github.com/olumjs/olum-starter/tree/checklist"
         />
       </div>
     </section>

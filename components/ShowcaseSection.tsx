@@ -1,5 +1,5 @@
 const techStack = [
-  { name: "TypeScript", slug: "typescript", color: "#3178C6" },
+  // { name: "TypeScript", slug: "typescript", color: "#3178C6" },
   { name: "Vite",       slug: "vite",       color: "#646CFF" },
   { name: "Tailwind",   slug: "tailwindcss", color: "#06B6D4" },
   { name: "Node.js",    slug: "nodedotjs",  color: "#5FA04E" },

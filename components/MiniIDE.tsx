@@ -16,6 +16,7 @@ export type IDEProps = {
   preview?: ReactNode;
   defaultView?: "preview" | "code";
   defaultFile?: string;   // full path e.g. "src/TodoList.html"
+  repoUrl?: string;       // links the project name in the breadcrumb to the source
 };
 
 /* ─── Internal tree ─────────────────────────────────────────── */
@@ -200,6 +201,7 @@ export default function MiniIDE({
   preview,
   defaultView = "preview",
   defaultFile,
+  repoUrl,
 }: IDEProps) {
   const first = defaultFile
     ? (files.find(f => f.name === defaultFile) ?? files[0])
@@ -263,38 +265,58 @@ export default function MiniIDE({
           )}
         </span>
 
-        {/* View toggle */}
-        {tabs.length > 1 && (
-          <div
-            className="flex items-center gap-0.5 p-1 rounded-lg border border-[var(--border)] bg-[var(--bg)] shrink-0"
-            role="tablist" aria-label="View mode"
-          >
-            {tabs.map(v => (
-              <button
-                key={v}
-                role="tab"
-                aria-selected={view === v}
-                onClick={() => setView(v)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs capitalize transition-all duration-150 ${
-                  view === v
-                    ? "bg-[var(--surface)] text-[var(--fg)] shadow-sm"
-                    : "text-[var(--fg-muted)] hover:text-[var(--fg-2)]"
-                }`}
-              >
-                {v === "preview" ? (
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" />
-                  </svg>
-                ) : (
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
-                  </svg>
-                )}
-                {v}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* View toggle */}
+          {tabs.length > 1 && (
+            <div
+              className="flex items-center gap-0.5 p-1 rounded-lg border border-[var(--border)] bg-[var(--bg)]"
+              role="tablist" aria-label="View mode"
+            >
+              {tabs.map(v => (
+                <button
+                  key={v}
+                  role="tab"
+                  aria-selected={view === v}
+                  onClick={() => setView(v)}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs capitalize transition-all duration-150 ${
+                    view === v
+                      ? "bg-[var(--surface)] text-[var(--fg)] shadow-sm"
+                      : "text-[var(--fg-muted)] hover:text-[var(--fg-2)]"
+                  }`}
+                >
+                  {v === "preview" ? (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" />
+                    </svg>
+                  ) : (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+                    </svg>
+                  )}
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Source link */}
+          {repoUrl && (
+            <a
+              href={repoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="View source on GitHub"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--fg-muted)] hover:text-[#25C97E] transition-colors duration-150"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              Source
+            </a>
+          )}
+        </div>
       </div>
 
       {/* ── IDE body ────────────────────────────────────────── */}

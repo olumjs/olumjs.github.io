@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { SidebarGroup, SidebarItem } from "@/lib/docs-content";
 import {
@@ -24,6 +24,7 @@ export default function DocsSidebar({
   activeRef?: string;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const [state, setState] = useState<Record<string, SectionState>>(() => {
     const init: Record<string, SectionState> = {};
@@ -33,11 +34,22 @@ export default function DocsSidebar({
     return init;
   });
 
-  async function selectBranch(group: SidebarGroup, branch: string) {
+  async function selectBranch(group: SidebarGroup, branch: string, syncUrl = true) {
     const repo = group.repo!;
     const fixed = group.items.filter((i) => i.fixed);
+    const isDefault = branch === group.defaultBranch;
 
-    if (branch === group.defaultBranch) {
+    // Keep the current doc in view but at the selected branch, and reflect the
+    // choice in the URL so window.location stays in sync (and the page re-renders
+    // its content at the picked ref).
+    if (syncUrl) {
+      const query = isDefault
+        ? ""
+        : `?repo=${encodeURIComponent(repo)}&ref=${encodeURIComponent(branch)}`;
+      router.push(`${pathname}${query}`, { scroll: false });
+    }
+
+    if (isDefault) {
       setState((s) => ({ ...s, [repo]: { branch, items: group.items, loading: false } }));
       return;
     }
@@ -64,7 +76,7 @@ export default function DocsSidebar({
   useEffect(() => {
     if (!activeRepo || !activeRef) return;
     const group = groups.find((g) => g.repo === activeRepo);
-    if (group && activeRef !== group.defaultBranch) selectBranch(group, activeRef);
+    if (group && activeRef !== group.defaultBranch) selectBranch(group, activeRef, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
