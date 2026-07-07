@@ -4,8 +4,32 @@ import DocsSidebar from "@/components/DocsSidebar";
 import Footer from "@/components/Footer";
 import { getDocsNav } from "@/lib/docs-content";
 import { slugify } from "@/lib/utils";
+import { siteConfig } from "@/lib/site-config";
 
-export const metadata: Metadata = { title: "Docs — OlumJS" };
+const docsDescription =
+  "Learn OlumJS — a small, Vue/React-inspired UI framework. Guides on components, signal-based state and reactivity, scoped CSS, and its native-HTML template syntax.";
+
+export const metadata: Metadata = {
+  title: { absolute: "Docs — OlumJS" },
+  description: docsDescription,
+  alternates: { canonical: `${siteConfig.url}/docs` },
+  openGraph: {
+    type: "website",
+    url: `${siteConfig.url}/docs`,
+    title: "Docs — OlumJS",
+    description: docsDescription,
+    siteName: siteConfig.name,
+  },
+};
+
+const docsBreadcrumb = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: siteConfig.url },
+    { "@type": "ListItem", position: 2, name: "Docs", item: `${siteConfig.url}/docs` },
+  ],
+};
 
 const buckets = [
   { bucket: "Code", attrs: "when, each, key, on* (events), html", inside: "a JS expression" },
@@ -28,6 +52,10 @@ export default async function DocsPage() {
   const groups = await getDocsNav();
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(docsBreadcrumb).replace(/</g, "\\u003c") }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
         <div className="flex gap-8 py-8">
           <DocsSidebar groups={groups} />

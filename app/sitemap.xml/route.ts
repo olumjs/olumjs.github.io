@@ -1,19 +1,26 @@
 import { siteConfig } from "@/lib/site-config";
-import { getDocOrder } from "@/lib/docs-content";
+import { getDocOrder, getDocDates } from "@/lib/docs-content";
 
 const today = new Date().toISOString().split("T")[0];
 
 export async function GET() {
-  const docOrder = await getDocOrder();
+  const [docOrder, docDates] = await Promise.all([getDocOrder(), getDocDates()]);
   const staticRoutes = [
-    { url: siteConfig.url, changefreq: "monthly", priority: "1.0", lastmod: today },
+    // Home reflects the freshest doc change, falling back to the build date.
+    {
+      url: siteConfig.url,
+      changefreq: "monthly",
+      priority: "1.0",
+      lastmod: Object.values(docDates).sort().at(-1) ?? today,
+    },
   ];
 
   const docRoutes = docOrder.map((href) => ({
     url: `${siteConfig.url}${href}`,
     changefreq: "monthly",
     priority: href === "/docs" ? "0.9" : "0.8",
-    lastmod: today,
+    // Real last-commit date per doc; build date only where GitHub has no history.
+    lastmod: docDates[href] ?? today,
   }));
 
   const allRoutes = [...staticRoutes, ...docRoutes];

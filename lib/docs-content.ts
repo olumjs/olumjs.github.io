@@ -39,6 +39,7 @@ export interface Doc {
   order: number;
   body: string; // markdown, frontmatter stripped
   editUrl: string; // GitHub blob URL for the source file
+  lastModified?: string; // ISO date (YYYY-MM-DD) of the file's last commit, if known
 }
 
 export type SidebarItem = { label: string; href: string; fixed?: boolean };
@@ -80,6 +81,7 @@ export const STATIC_DOCS: Doc[] = [
     group: "Getting Started",
     order: 0,
     editUrl: "",
+    lastModified: "2026-07-04", // hand-maintained in-repo; bump when this content changes
     body: [
       "Scaffold a new OlumJS project with the official CLI — TypeScript, routing, and a dev server ready out of the box:",
       "",
@@ -132,6 +134,29 @@ function fetchRaw(url: string, label: string): Promise<string> {
     if (!r.ok) throw new Error(`Failed to fetch ${label}: ${r.status}`);
     return r.text();
   });
+}
+
+// Last-modified date (ISO YYYY-MM-DD) for a docs file, read from its most recent
+// commit. Powers accurate <lastmod> in the sitemap and dateModified in the doc's
+// JSON-LD. Cached weekly like everything else, and deliberately fault-tolerant:
+// any failure (rate limit, network, empty history) resolves to null so callers
+// fall back to the build date instead of breaking the page. This adds ~1 API
+// call per doc file — safe under the weekly cache; set GITHUB_TOKEN in CI.
+async function fetchLastModified(repo: string, path: string, ref?: string): Promise<string | null> {
+  const params = new URLSearchParams({ path, per_page: "1" });
+  if (ref) params.set("sha", ref);
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}/commits?${params}`, {
+      headers: ghHeaders(),
+      next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] },
+    });
+    if (!res.ok) return null;
+    const commits: { commit?: { committer?: { date?: string } } }[] = await res.json();
+    const date = commits[0]?.commit?.committer?.date;
+    return date ? date.split("T")[0] : null;
+  } catch {
+    return null;
+  }
 }
 
 // Compare version-like branch names numerically, so "v0.5.10" > "v0.5.9"
@@ -233,7 +258,10 @@ export async function getDocAt(repo: string, ref: string, slug: string): Promise
   }
   const file = items.find((it) => isDocFile(it) && it.name === `${slug}.md`);
   if (!file?.download_url) return null;
-  const raw = await fetchRaw(file.download_url, `${repo}/docs/${file.name}@${ref}`);
+  const [raw, lastModified] = await Promise.all([
+    fetchRaw(file.download_url, `${repo}/docs/${file.name}@${ref}`),
+    fetchLastModified(repo, `docs/${file.name}`, ref),
+  ]);
   const { data, body } = parseFrontmatter(raw);
   return {
     slug,
@@ -243,6 +271,7 @@ export async function getDocAt(repo: string, ref: string, slug: string): Promise
     order: Number(data.order) || 0,
     body,
     editUrl: file.html_url,
+    ...(lastModified && { lastModified }),
   };
 }
 
@@ -274,7 +303,10 @@ export const getAllDocs = cache(async (): Promise<Doc[]> => {
       console.log(`[docs] ${repo} @ ${latest} (latest) — ${mdFiles.length} file(s)`);
       return Promise.all(
         mdFiles.map(async (file): Promise<Doc> => {
-          const raw = await fetchRaw(file.download_url!, `${repo}/docs/${file.name}@${latest}`);
+          const [raw, lastModified] = await Promise.all([
+            fetchRaw(file.download_url!, `${repo}/docs/${file.name}@${latest}`),
+            fetchLastModified(repo, `docs/${file.name}`, latest),
+          ]);
           const { data, body } = parseFrontmatter(raw);
           const slug = file.name.replace(/\.md$/, "");
           return {
@@ -285,6 +317,7 @@ export const getAllDocs = cache(async (): Promise<Doc[]> => {
             order: Number(data.order) || 0,
             body,
             editUrl: file.html_url,
+            ...(lastModified && { lastModified }),
           };
         })
       );
@@ -354,4 +387,17 @@ export const getDocsNav = cache(async (): Promise<SidebarGroup[]> => {
 export async function getDocOrder(): Promise<string[]> {
   const groups = await getDocsNav();
   return groups.flatMap((g) => g.items.map((i) => i.href));
+}
+
+// Map of doc href → last-modified ISO date (only where a real date is known),
+// for accurate <lastmod> in the sitemap. The Introduction page (/docs) has no
+// file of its own, so it inherits the newest date across all docs.
+export async function getDocDates(): Promise<Record<string, string>> {
+  const docs = await getAllDocs();
+  const map: Record<string, string> = {};
+  for (const d of STATIC_DOCS) if (d.lastModified) map[`/docs/${d.slug}`] = d.lastModified;
+  for (const d of docs) if (d.lastModified) map[`/docs/${d.slug}`] = d.lastModified;
+  const newest = Object.values(map).sort().at(-1);
+  if (newest) map["/docs"] = newest;
+  return map;
 }

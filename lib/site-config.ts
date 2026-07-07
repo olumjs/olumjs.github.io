@@ -25,7 +25,16 @@ export const siteConfig = {
   ],
   themeColor: "#09090b",
   accentColor: "#25C97E",
+  locale: "en_US",
+  logo: `${siteUrl}/logo.png`,
   github: "https://github.com/olumjs",
   npm: "https://www.npmjs.com/package/olum",
+  twitter: "https://twitter.com/olumjs",
   twitterHandle: "@olumjs",
+  // Canonical off-site profiles — feeds JSON-LD `sameAs` for entity resolution.
+  sameAs: [
+    "https://github.com/olumjs",
+    "https://www.npmjs.com/package/olum",
+    "https://twitter.com/olumjs",
+  ],
 };

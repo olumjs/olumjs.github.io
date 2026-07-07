@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { getDocsNav } from "@/lib/docs-content";
@@ -36,12 +35,16 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   keywords: siteConfig.keywords,
+  applicationName: siteConfig.name,
   authors: [{ name: siteConfig.name, url: siteConfig.url }],
   creator: siteConfig.name,
+  publisher: siteConfig.name,
+  category: "technology",
+  formatDetection: { telephone: false, email: false, address: false },
   alternates: { canonical: siteConfig.url },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: siteConfig.locale,
     url: siteConfig.url,
     title: siteConfig.title,
     description: siteConfig.shortDescription,
@@ -69,30 +72,51 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const softwareSchema = {
+// A single linked @graph: the Organization, WebSite, and SoftwareApplication
+// entities cross-reference each other by @id so search engines resolve them as
+// one entity rather than three unrelated blobs (better for knowledge panels).
+const structuredData = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "@id": `${siteConfig.url}/#software`,
-  name: siteConfig.name,
-  url: siteConfig.url,
-  description: siteConfig.shortDescription,
-  applicationCategory: "DeveloperApplication",
-  operatingSystem: "Any",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-  downloadUrl: siteConfig.npm,
-  codeRepository: siteConfig.github,
-  programmingLanguage: "JavaScript",
-  keywords: "JavaScript, UI framework, VanillaJS, reactive, components",
-};
-
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "@id": `${siteConfig.url}/#website`,
-  name: siteConfig.name,
-  url: siteConfig.url,
-  description: siteConfig.shortDescription,
-  inLanguage: "en",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${siteConfig.url}/#organization`,
+      name: siteConfig.name,
+      url: siteConfig.url,
+      logo: {
+        "@type": "ImageObject",
+        "@id": `${siteConfig.url}/#logo`,
+        url: siteConfig.logo,
+        contentUrl: siteConfig.logo,
+      },
+      sameAs: siteConfig.sameAs,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteConfig.url}/#website`,
+      name: siteConfig.name,
+      url: siteConfig.url,
+      description: siteConfig.shortDescription,
+      inLanguage: "en",
+      publisher: { "@id": `${siteConfig.url}/#organization` },
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${siteConfig.url}/#software`,
+      name: siteConfig.name,
+      url: siteConfig.url,
+      description: siteConfig.shortDescription,
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "Any",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      downloadUrl: siteConfig.npm,
+      codeRepository: siteConfig.github,
+      programmingLanguage: "JavaScript",
+      keywords: "JavaScript, UI framework, VanillaJS, reactive, components",
+      publisher: { "@id": `${siteConfig.url}/#organization` },
+      sameAs: siteConfig.sameAs,
+    },
+  ],
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -105,29 +129,26 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`${geist.variable} ${jakarta.variable} ${jetbrains.variable}`}
     >
       <head>
+        {/* Runs synchronously before first paint: dark is the default, and we
+            only switch to light when the user has explicitly chosen it. The OS
+            preference is never consulted, so there is no theme flash on reload. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('olum-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')}catch(e){document.documentElement.setAttribute('data-theme','dark')}`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
       </head>
       <body className="bg-[var(--bg)] text-[var(--fg)] antialiased min-h-screen">
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('olum-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
-          }}
-        />
         <ThemeProvider>
           <Navbar navGroups={navGroups} />
           {children}
         </ThemeProvider>
-        {/* JSON-LD structured data */}
+        {/* JSON-LD structured data (Organization + WebSite + SoftwareApplication) */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema).replace(/</g, "\\u003c") }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema).replace(/</g, "\\u003c") }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
         />
       </body>
     </html>

@@ -4,7 +4,8 @@ import Link from "next/link";
 import DocsSidebar from "@/components/DocsSidebar";
 import Footer from "@/components/Footer";
 import { Markdown } from "@/components/Markdown";
-import { extractToc } from "@/lib/utils";
+import { extractToc, plainExcerpt } from "@/lib/utils";
+import { siteConfig } from "@/lib/site-config";
 import {
   isRepoAllowed,
   getAllDocs,
@@ -35,7 +36,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const doc = await getDoc(slug);
   if (!doc) return {};
-  return { title: `${doc.title} — OlumJS Docs` };
+
+  const title = `${doc.title} — OlumJS Docs`;
+  const description = plainExcerpt(doc.body) || siteConfig.shortDescription;
+  // Canonical points at the clean, unversioned URL so the ?repo=&ref= variants
+  // (older doc versions) consolidate their ranking signals onto this page.
+  const canonical = `${siteConfig.url}/docs/${slug}`;
+
+  return {
+    title: { absolute: title },
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: "article",
+      url: canonical,
+      title,
+      description,
+      siteName: siteConfig.name,
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 async function getPrevNext(slug: string) {
@@ -65,8 +85,46 @@ export default async function DocSectionPage({ params, searchParams }: Props) {
   const { prev, next } = await getPrevNext(slug);
   const toc = extractToc(doc.body);
 
+  const canonical = `${siteConfig.url}/docs/${slug}`;
+  const description = plainExcerpt(doc.body) || siteConfig.shortDescription;
+  const docStructuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "@id": `${canonical}#article`,
+        headline: doc.title,
+        description,
+        articleSection: doc.group,
+        inLanguage: "en",
+        ...(doc.lastModified && {
+          datePublished: doc.lastModified,
+          dateModified: doc.lastModified,
+        }),
+        url: canonical,
+        mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+        isPartOf: { "@id": `${siteConfig.url}/#website` },
+        author: { "@id": `${siteConfig.url}/#organization` },
+        publisher: { "@id": `${siteConfig.url}/#organization` },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${canonical}#breadcrumb`,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: siteConfig.url },
+          { "@type": "ListItem", position: 2, name: "Docs", item: `${siteConfig.url}/docs` },
+          { "@type": "ListItem", position: 3, name: doc.title, item: canonical },
+        ],
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(docStructuredData).replace(/</g, "\\u003c") }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
         <div className="flex gap-8 py-8">
           <DocsSidebar groups={groups} activeRepo={version?.repo} activeRef={version?.ref} />

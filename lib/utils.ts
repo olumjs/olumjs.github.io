@@ -16,6 +16,30 @@ export function slugify(text: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+// Reduce a markdown string to a plain-text, single-line excerpt suitable for a
+// meta description / OG description. Strips frontmatter, fenced code, headings,
+// links, images, and inline formatting, then truncates on a word boundary.
+export function plainExcerpt(markdown: string, max = 155): string {
+  const text = markdown
+    .replace(/^---\n[\s\S]*?\n---\n/, "") // frontmatter
+    .replace(/```[\s\S]*?```/g, " ") // fenced code
+    .replace(/`([^`]+)`/g, "$1") // inline code
+    .replace(/^:{2,}\s*\w*(\[[^\]]*\])?(\{[^}]*\})?\s*$/gm, " ") // directive fences (:::warn / :::)
+    .replace(/:{1,3}(\w+)(\[[^\]]*\])?(\{[^}]*\})?/g, "$2") // inline/leaf directives -> label
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ") // images
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // links -> text
+    .replace(/^#{1,6}\s+/gm, "") // heading markers
+    .replace(/^\s*[-*+]\s+/gm, "") // list bullets
+    .replace(/[*_>#]/g, "") // stray emphasis/blockquote/hash
+    .replace(/[[\]]/g, "") // leftover directive-label brackets
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+}
+
 export interface TocItem {
   id: string;
   title: string;
