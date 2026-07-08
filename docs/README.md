@@ -1,6 +1,6 @@
 # Maintaining the `/docs` system
 
-This is a guide for **maintainers of this website** (olumjs.github.io) — not for writing OlumJS docs. It explains how the `/docs` section works and how to change it.
+This is a guide for **maintainers of this website** (olumjs.top) — not for writing OlumJS docs. It explains how the `/docs` section works and how to change it.
 
 > The actual doc content is **not** in this repo. It's fetched from the `docs/*.md` folders of external repos (olum, olum-router, …) at request time and cached. To edit doc *content*, edit those repos.
 
