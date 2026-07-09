@@ -14,6 +14,12 @@ export const playgroundGroups: PlaygroundGroup[] = [
       { slug: "dynamic-attributes", title: "Dynamic attributes" },
     ],
   },
+  {
+    label: "Examples",
+    items: [
+      { slug: "todo-app", title: "Todo app" },
+    ],
+  },
 ];
 
 /** Flat list of every example, in sidebar order. */
