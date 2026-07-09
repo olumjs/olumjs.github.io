@@ -279,6 +279,7 @@ function SearchButton({ onClick }: { onClick: () => void }) {
 
 const navLinks = [
   { href: "/docs", label: "Docs" },
+  { href: "/playground", label: "Playground" },
 ];
 
 export default function Navbar({ navGroups }: { navGroups: SidebarGroup[] }) {

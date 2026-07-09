@@ -1,5 +1,6 @@
 import { siteConfig } from "@/lib/site-config";
 import { getDocOrder, getDocDates } from "@/lib/docs-content";
+import { playgroundExamples } from "@/lib/playground-examples";
 
 const today = new Date().toISOString().split("T")[0];
 
@@ -13,6 +14,14 @@ export async function GET() {
       priority: "1.0",
       lastmod: Object.values(docDates).sort().at(-1) ?? today,
     },
+    // Bare /playground redirects to the first example, so it is intentionally
+    // omitted here — sitemaps should list canonical (non-redirecting) URLs.
+    ...playgroundExamples.map((ex, i) => ({
+      url: `${siteConfig.url}/playground/${ex.slug}`,
+      changefreq: "monthly",
+      priority: i === 0 ? "0.9" : "0.7",
+      lastmod: today,
+    })),
   ];
 
   const docRoutes = docOrder.map((href) => ({
