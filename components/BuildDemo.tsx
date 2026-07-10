@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 // Drop your screen recording here (see public/demo/README). MP4 is the safe
@@ -58,9 +57,10 @@ export default function BuildDemo() {
         </div>
       </div>
 
-      {/* CTA into the real playground */}
+      {/* CTA into the real playground — a full page load so the playground's
+          cross-origin isolation headers apply (WebContainers needs them). */}
       <div className="mt-8 flex flex-col items-center gap-3">
-        <Link
+        <a
           href="/playground/todo-app"
           className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-[#25C97E] rounded-xl hover:brightness-110 hover:scale-[1.02] active:scale-[0.99] transition-all duration-200 shadow-[0_0_32px_rgba(37,201,126,0.28),0_2px_8px_rgba(0,0,0,0.3)]"
         >
@@ -68,7 +68,7 @@ export default function BuildDemo() {
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M2 7h10M8 3l4 4-4 4" />
           </svg>
-        </Link>
+        </a>
         <p className="text-xs font-mono text-[var(--fg-subtle)]">No install. Runs in your browser.</p>
       </div>
     </div>

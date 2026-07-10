@@ -71,9 +71,17 @@ export default function Footer() {
               <ul className="space-y-2.5">
                 {items.map((item) => (
                   <li key={item.label}>
-                    <Link href={item.href} className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-150">
-                      {item.label}
-                    </Link>
+                    {item.href.startsWith("/playground") ? (
+                      // Full page load so the playground's cross-origin isolation
+                      // headers apply (WebContainers needs them).
+                      <a href={item.href} className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-150">
+                        {item.label}
+                      </a>
+                    ) : (
+                      <Link href={item.href} className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-150">
+                        {item.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

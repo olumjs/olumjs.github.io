@@ -237,19 +237,6 @@ export default function BenchmarkSection() {
                 <h3 className="text-base font-bold text-[var(--fg)]" style={{ fontFamily: "var(--font-syne)" }}>
                   {item.name}
                 </h3>
-                <p className="text-sm text-[var(--fg-muted)] leading-relaxed">{item.description}</p>
-                {item.command && (
-                  <code className="mt-1 inline-flex items-center gap-2 self-start rounded-lg px-3 py-2 font-mono text-xs bg-[#0b0f0d] border border-[var(--border)]">
-                    <span className="font-bold" style={{ color: item.accent }}>
-                      $
-                    </span>
-                    <span className="text-[#e6f4ee]">{item.command}</span>
-                  </code>
-                )}
-                {item.npmBadge && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.npmBadge} alt={`${item.name} version on npm`} className="h-5 mt-1 self-start" />
-                )}
               </div>
             </div>
           ))}

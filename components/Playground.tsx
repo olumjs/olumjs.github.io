@@ -125,6 +125,22 @@ export default function Playground({ initialSlug }: { initialSlug: string }) {
   // Embed the project once. The VM handle lets us switch files and navigate the
   // preview later without reloading the iframe.
   useEffect(() => {
+    // WebContainers needs SharedArrayBuffer, which requires the document to be
+    // cross-origin isolated. The COOP/COEP headers are scoped to /playground in
+    // next.config, so they only take effect on a real document load of this
+    // route. Arriving via client-side navigation from a non-isolated page leaves
+    // `crossOriginIsolated` false and the embed fails silently — force one full
+    // reload of the current URL to pick up the headers. The sessionStorage guard
+    // ensures we never reload more than once if isolation still can't be had.
+    const RELOAD_KEY = "pg-reload-for-coi";
+    if (window.crossOriginIsolated) {
+      sessionStorage.removeItem(RELOAD_KEY);
+    } else if (!sessionStorage.getItem(RELOAD_KEY)) {
+      sessionStorage.setItem(RELOAD_KEY, "1");
+      window.location.reload();
+      return;
+    }
+
     aliveRef.current = true; // reset for Strict Mode's second mount
     const host = hostRef.current;
     if (!host) return;
