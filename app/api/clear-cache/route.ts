@@ -1,9 +1,11 @@
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { DOCS_TAG } from "@/lib/docs-content";
+import { PLAYGROUND_TAG, clearPlaygroundCache } from "@/lib/playground-examples.server";
 
 // GET /api/clear-cache
-// Invalidates the cached docs so the next request refetches them from GitHub.
+// Invalidates the cached docs and playground examples so the next request
+// refetches them from GitHub.
 //
 // Optional protection: if REVALIDATE_SECRET is set, the request must include a
 // matching `?secret=…` (or `x-revalidate-secret` header). Without that env var
@@ -19,13 +21,17 @@ export async function GET(request: Request) {
     }
   }
 
-  // "max" → stale-while-revalidate: docs are marked stale and refetched in the
-  // background on the next visit (recommended over the deprecated 1-arg form).
+  // "max" → stale-while-revalidate: entries are marked stale and refetched in
+  // the background on the next visit (recommended over the deprecated 1-arg form).
   revalidateTag(DOCS_TAG, "max");
+  revalidateTag(PLAYGROUND_TAG, "max");
+  // The playground also keeps an in-process memo and an on-disk tree cache that
+  // the fetch tag doesn't cover — drop those too.
+  await clearPlaygroundCache();
 
   return NextResponse.json({
     revalidated: true,
-    tag: DOCS_TAG,
+    tags: [DOCS_TAG, PLAYGROUND_TAG],
     now: new Date().toISOString(),
   });
 }

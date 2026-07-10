@@ -1,11 +1,17 @@
 import { siteConfig } from "@/lib/site-config";
 import { getDocOrder, getDocDates } from "@/lib/docs-content";
-import { playgroundExamples } from "@/lib/playground-examples";
+import { getPlaygroundGroups } from "@/lib/playground-examples.server";
+import { flattenExamples } from "@/lib/playground-examples";
 
 const today = new Date().toISOString().split("T")[0];
 
 export async function GET() {
-  const [docOrder, docDates] = await Promise.all([getDocOrder(), getDocDates()]);
+  const [docOrder, docDates, playgroundGroups] = await Promise.all([
+    getDocOrder(),
+    getDocDates(),
+    getPlaygroundGroups(),
+  ]);
+  const playgroundExamples = flattenExamples(playgroundGroups);
   const staticRoutes = [
     // Home reflects the freshest doc change, falling back to the build date.
     {

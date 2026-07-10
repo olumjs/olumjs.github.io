@@ -4,27 +4,26 @@ import Link from "next/link";
 import sdk, { type VM } from "@stackblitz/sdk";
 import { useTheme } from "@/components/ThemeProvider";
 import {
-  playgroundGroups,
-  playgroundExamples,
-  exampleFilePath,
+  type PlaygroundGroup,
+  STARTER_REPO_SLUG,
   examplePreviewPath,
   findExample,
+  defaultExample,
 } from "@/lib/playground-examples";
-
-// StackBlitz project slug: https://stackblitz.com/edit/<PROJECT_ID>
-const PROJECT_ID = "olumjs-compact";
 
 /* ─── Examples dropdown ─────────────────────────────────────── */
 function ExamplesDropdown({
+  groups,
   currentSlug,
   onSelect,
 }: {
+  groups: PlaygroundGroup[];
   currentSlug: string;
   onSelect: (slug: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const current = findExample(currentSlug);
+  const current = findExample(groups, currentSlug);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -59,8 +58,8 @@ function ExamplesDropdown({
           style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}
           role="listbox"
         >
-          {playgroundGroups.map((group) => (
-            <div key={group.label} className="py-1.5">
+          {groups.map((group) => (
+            <div key={group.slug} className="py-1.5">
               <p className="px-3 py-1 text-[10px] font-mono font-bold uppercase tracking-widest text-[var(--fg-subtle)]">
                 {group.label}
               </p>
@@ -95,7 +94,13 @@ function ExamplesDropdown({
 }
 
 /* ─── Playground ────────────────────────────────────────────── */
-export default function Playground({ initialSlug }: { initialSlug: string }) {
+export default function Playground({
+  groups,
+  initialSlug,
+}: {
+  groups: PlaygroundGroup[];
+  initialSlug: string;
+}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const vmRef = useRef<VM | null>(null);
   const slugRef = useRef(initialSlug); // always the latest selection
@@ -103,6 +108,13 @@ export default function Playground({ initialSlug }: { initialSlug: string }) {
   const { theme } = useTheme();        // site theme, drives the embed theme
   const [slug, setSlug] = useState(initialSlug);
   const [ready, setReady] = useState(false);
+
+  // Look up the editor file (e.g. src/(examples)/00-introduction/00-hello-world/page.html)
+  // for a slug from the catalogue passed in from the server.
+  const fileOf = useCallback(
+    (s: string) => findExample(groups, s)?.filePath,
+    [groups],
+  );
 
   // Navigate the preview to the currently-selected example. In WebContainers the
   // dev server boots asynchronously and `preview.setUrl` is ignored until it is
@@ -158,10 +170,12 @@ export default function Playground({ initialSlug }: { initialSlug: string }) {
     const embedTheme =
       document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
 
+    // Import and run the GitHub repo (olumjs/olum-starter@compact) live in
+    // StackBlitz WebContainers — no StackBlitz-hosted project involved.
     sdk
-      .embedProjectId(target, PROJECT_ID, {
+      .embedGithubProject(target, STARTER_REPO_SLUG, {
         forceEmbedLayout: true,
-        openFile: exampleFilePath(initialSlug),
+        openFile: fileOf(initialSlug),
         view: "default",
         theme: embedTheme,
         hideNavigation: true,
@@ -206,28 +220,32 @@ export default function Playground({ initialSlug }: { initialSlug: string }) {
     // Update the URL in place — no Next navigation, so the iframe stays mounted.
     window.history.pushState(null, "", `/playground/${next}`);
     const vm = vmRef.current;
-    if (vm) {
-      vm.editor.openFile(exampleFilePath(next)).catch(() => {});
+    const file = fileOf(next);
+    if (vm && file) {
+      vm.editor.openFile(file).catch(() => {});
       navigatePreview();
     }
-  }, [navigatePreview]);
+  }, [fileOf, navigatePreview]);
 
   // Keep the selected example in sync with the browser's back/forward buttons.
   useEffect(() => {
     function onPop() {
-      const seg = window.location.pathname.split("/").filter(Boolean)[1];
-      const ex = findExample(seg) ?? playgroundExamples[0];
+      // /playground/<group>/<item> → "group/item"
+      const segs = window.location.pathname.split("/").filter(Boolean);
+      segs.shift(); // drop "playground"
+      const ex = findExample(groups, segs.join("/")) ?? defaultExample(groups);
+      if (!ex) return;
       slugRef.current = ex.slug;
       setSlug(ex.slug);
       const vm = vmRef.current;
       if (vm) {
-        vm.editor.openFile(exampleFilePath(ex.slug)).catch(() => {});
+        vm.editor.openFile(ex.filePath).catch(() => {});
         navigatePreview();
       }
     }
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, [navigatePreview]);
+  }, [groups, navigatePreview]);
 
   return (
     <div className="flex h-screen flex-col bg-[var(--bg)] pt-[60px]">
@@ -241,7 +259,7 @@ export default function Playground({ initialSlug }: { initialSlug: string }) {
           >
             Playground
           </span>
-          <ExamplesDropdown currentSlug={slug} onSelect={selectExample} />
+          <ExamplesDropdown groups={groups} currentSlug={slug} onSelect={selectExample} />
         </div>
 
         <div className="flex items-center gap-2 shrink-0">

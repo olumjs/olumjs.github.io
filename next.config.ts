@@ -1,13 +1,21 @@
 import type { NextConfig } from "next";
-import { defaultExampleSlug } from "./lib/playground-examples";
+import { getPlaygroundGroups } from "./lib/playground-examples.server";
+import { defaultExample } from "./lib/playground-examples";
 
 const nextConfig: NextConfig = {
   async redirects() {
+    // Land the bare playground on the first example. Derive it from the starter
+    // repo, falling back to the known first example if GitHub is unreachable.
+    let defaultSlug = "introduction/hello-world";
+    try {
+      defaultSlug = (defaultExample(await getPlaygroundGroups())?.slug) ?? defaultSlug;
+    } catch {
+      /* offline/rate-limited — keep the fallback */
+    }
     return [
       { source: "/blog", destination: "/", permanent: false },
       { source: "/blog/:slug*", destination: "/", permanent: false },
-      // Land the bare playground on the first example.
-      { source: "/playground", destination: `/playground/${defaultExampleSlug}`, permanent: false },
+      { source: "/playground", destination: `/playground/${defaultSlug}`, permanent: false },
     ];
   },
   async headers() {
