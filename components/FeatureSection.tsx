@@ -12,15 +12,16 @@ export default function FeatureSection() {
         {/* Header */}
         <div className="text-center mb-14">
           <div className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-[#25C97E] tracking-widest uppercase mb-4 px-3 py-1.5 bg-[rgba(37,201,126,0.07)] border border-[rgba(37,201,126,0.15)] rounded-full">
-            How it works
+            <span className="h-1.5 w-1.5 rounded-full bg-[#25C97E] animate-pulse" />
+            Live build · unedited
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[var(--fg)] leading-tight" style={{ fontFamily: "var(--font-syne)" }}>
-            Build in Seconds
+            Blank File to Todo App
             <br />
-            <span className="gradient-text">With no Setup</span>
+            <span className="gradient-text">Before Your Coffee Gets Cold</span>
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[var(--fg-muted)] max-w-xl mx-auto">
-            Watch a todo app go from an empty file to running in under a minute — then build your own in the playground, no install required.
+            Start from an empty file and have a working app in under 5 minutes — no setup, no config. Watch it happen, then build your own.
           </p>
         </div>
 

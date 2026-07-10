@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 
 // Drop your screen recording here (see public/demo/README). MP4 is the safe
 // baseline; add a WebM <source> above the MP4 one if you want smaller files.
@@ -9,11 +10,19 @@ const VIDEO_POSTER = "/demo/todo-thumbnail.jpg";
 /**
  * Muted, autoplaying, looping demo video framed like an app window, with a CTA
  * into the real playground. The video is muted so browsers allow autoplay; the
- * poster shows until the first frame is decoded.
+ * poster shows until the first frame is decoded. Controls are hidden.
  */
 export default function BuildDemo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // React doesn't always reflect the `muted` prop onto the DOM node, so force
+  // it here to guarantee the autoplaying demo never plays sound.
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = true;
+  }, []);
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Video card with window chrome */}
       <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--card)] shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
         <div className="flex items-center gap-2 h-10 px-4 border-b border-[var(--border-subtle)] bg-[var(--surface)]">
@@ -25,18 +34,22 @@ export default function BuildDemo() {
           <span className="ml-2 text-xs font-mono text-[var(--fg-subtle)]">
             todo-app — built live in OlumJS
           </span>
+          <span className="ml-auto hidden sm:inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-[#25C97E]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#25C97E] animate-pulse" />
+            under 5 min
+          </span>
         </div>
 
-        <div className="relative aspect-video bg-black">
+        <div className="relative bg-black">
           <video
-            className="h-full w-full"
+            ref={videoRef}
+            className="block w-full h-auto"
             poster={VIDEO_POSTER}
             preload="metadata"
             autoPlay
             muted
             loop
             playsInline
-            controls
           >
             <source src={VIDEO_SRC} type="video/mp4" />
             {/* Add captions for accessibility once you have them:

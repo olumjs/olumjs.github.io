@@ -29,12 +29,12 @@ export const siteConfig = {
   logo: `${siteUrl}/logo.png`,
   github: "https://github.com/olumjs",
   npm: "https://www.npmjs.com/package/olum",
-  twitter: "https://twitter.com/olumjs",
-  twitterHandle: "@olumjs",
+  bluesky: "https://bsky.app/profile/olumjs.bsky.social",
+  blueskyHandle: "@olumjs.bsky.social",
   // Canonical off-site profiles — feeds JSON-LD `sameAs` for entity resolution.
   sameAs: [
     "https://github.com/olumjs",
     "https://www.npmjs.com/package/olum",
-    "https://twitter.com/olumjs",
+    "https://bsky.app/profile/olumjs.bsky.social",
   ],
 };

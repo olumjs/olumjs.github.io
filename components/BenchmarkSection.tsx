@@ -3,62 +3,114 @@
 const ecosystem = [
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    ),
+    name: "Plain HTML",
+    tag: "zero-config",
+    description:
+      "Components are ordinary `.html` files — no custom file type. Every editor understands them out of the box, with no extension, formatter, or syntax plugin to install.",
+    accent: "#25C97E",
+  },
+  {
+    icon: (
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <polyline points="16 3 21 3 21 8" />
         <line x1="4" y1="20" x2="21" y2="3" />
         <polyline points="21 16 21 21 16 21" />
         <line x1="15" y1="15" x2="21" y2="21" />
       </svg>
     ),
-    name: "Olum Router",
+    name: "Router",
     tag: "official",
     description: "File-based routing with dynamic segments, nested layouts, and async data loading. Zero-config, instant HMR.",
-    links: [{ label: "Docs", href: "http://localhost:3000/docs/router" }, { label: "npm", href: "https://www.npmjs.com/package/olum-router" }],
+    links: [
+      { label: "Docs", href: "http://localhost:3000/docs/router" },
+      { label: "npm", href: "https://www.npmjs.com/package/olum-router" },
+    ],
     accent: "#25C97E",
   },
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2" />
-        <polyline points="8 21 12 17 16 21" />
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <rect x="9" y="9" width="6" height="6" />
+        <path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2" />
       </svg>
     ),
-    name: "Olum DevTools",
-    tag: "official",
-    description: "Browser extension with component inspector, signal graph explorer, and time-travel debugging built in.",
-    // links: [{ label: "Chrome", href: "#" }, { label: "Firefox", href: "#" }],
+    name: "Compiler",
+    tag: "npm",
+    description: "Compiles `.html` single-file components into optimized JavaScript. The engine that powers the CLI, dev server, and build pipeline.",
+    // npmBadge: "https://img.shields.io/npm/v/olum-compiler?style=flat-square&color=25C97E&logo=npm&logoColor=white&label=npm",
+    links: [{ label: "npm", href: "https://www.npmjs.com/package/olum-compiler" }],
     accent: "#25C97E",
   },
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <polyline points="4 17 10 11 4 5" />
         <line x1="12" y1="19" x2="20" y2="19" />
       </svg>
     ),
     name: "create-olum",
     tag: "CLI",
-    description: "Scaffold a new project in seconds. Choose from starter templates: minimal, full-stack, PWA, or library.",
-    links: [{ label: "npm", href: "https://www.npmjs.com/package/create-olum" }, { label: "Guide", href: "/docs/get-started" }],
+    description: "Powered by olum-cli under the hood. Scaffold a full project's boilerplate in one command — no install required.",
+    links: [
+      { label: "npm", href: "https://www.npmjs.com/package/create-olum" },
+      { label: "Guide", href: "/docs/get-started" },
+    ],
     accent: "#25C97E",
   },
   {
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <ellipse cx="12" cy="5" rx="9" ry="3" />
-        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-      </svg>
-    ),
-    name: "Olum Store",
-    tag: "official",
-    description: "Ergonomic global state built on the same signal primitives. No boilerplate, no selectors — just reactive stores.",
-    // links: [{ label: "Docs", href: "/docs" }, { label: "npm", href: "#" }],
-    accent: "#25C97E",
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z" />
         <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
         <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z" />
@@ -69,10 +121,37 @@ const ecosystem = [
         <path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z" />
       </svg>
     ),
-    name: "VS Code Extension",
+    name: "Editor Extension",
     tag: "IDE",
-    description: "Syntax highlighting, IntelliSense, auto-imports, and inline signal previews for `.olum` single-file components.",
-    links: [{ label: "VSC Marketplace", href: "https://marketplace.visualstudio.com/items?itemName=eissapk.olum" }, { label: "VSX Marketplace", href: "https://open-vsx.org/extension/eissapk/olum" }],
+    description:
+      "Syntax highlighting, IntelliSense, auto-imports, and inline signal previews for `.html` single-file components. Works in VS Code and any Open VSX editor like Cursor.",
+    links: [
+      { label: "VSC Marketplace", href: "https://marketplace.visualstudio.com/items?itemName=eissapk.olum" },
+      { label: "VSX Marketplace", href: "https://open-vsx.org/extension/eissapk/olum" },
+    ],
+    accent: "#25C97E",
+  },
+  {
+    icon: (
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="2" y="3" width="20" height="14" rx="2" />
+        <polyline points="8 21 12 17 16 21" />
+      </svg>
+    ),
+    name: "Dev Tools",
+    tag: "official",
+    description:
+      "Visualize the component tree, inspect and tweak state live, and time-travel through changes — all built right in, no install needed.",
+    // links: [{ label: "Chrome", href: "#" }, { label: "Firefox", href: "#" }],
     accent: "#25C97E",
   },
   // {
@@ -105,10 +184,7 @@ export default function BenchmarkSection() {
           <div className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-[#25C97E] tracking-widest uppercase mb-4 px-3 py-1.5 bg-[rgba(37,201,126,0.07)] border border-[rgba(37,201,126,0.15)] rounded-full">
             Ecosystem
           </div>
-          <h2
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[var(--fg)] leading-tight"
-            style={{ fontFamily: "var(--font-syne)" }}
-          >
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[var(--fg)] leading-tight" style={{ fontFamily: "var(--font-syne)" }}>
             Everything works
             <br />
             <span className="gradient-text">out of the box.</span>
@@ -158,31 +234,22 @@ export default function BenchmarkSection() {
 
               {/* Name + description */}
               <div className="relative flex flex-col gap-1.5">
-                <h3
-                  className="text-base font-bold text-[var(--fg)]"
-                  style={{ fontFamily: "var(--font-syne)" }}
-                >
+                <h3 className="text-base font-bold text-[var(--fg)]" style={{ fontFamily: "var(--font-syne)" }}>
                   {item.name}
                 </h3>
-                <p className="text-sm text-[var(--fg-muted)] leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
-
-              {/* Links */}
-              <div className="relative mt-auto flex items-center gap-3 pt-2 border-t border-[var(--border-subtle)]">
-                {item.links?.length ? item.links.map((link) => (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className="text-xs font-medium transition-colors duration-150"
-                    style={{ color: "var(--fg-muted)" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = item.accent)}
-                    onMouseLeave={e => (e.currentTarget.style.color = "var(--fg-muted)")}
-                  >
-                    {link.label} →
-                  </a>
-                )): ""}
+                <p className="text-sm text-[var(--fg-muted)] leading-relaxed">{item.description}</p>
+                {item.command && (
+                  <code className="mt-1 inline-flex items-center gap-2 self-start rounded-lg px-3 py-2 font-mono text-xs bg-[#0b0f0d] border border-[var(--border)]">
+                    <span className="font-bold" style={{ color: item.accent }}>
+                      $
+                    </span>
+                    <span className="text-[#e6f4ee]">{item.command}</span>
+                  </code>
+                )}
+                {item.npmBadge && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.npmBadge} alt={`${item.name} version on npm`} className="h-5 mt-1 self-start" />
+                )}
               </div>
             </div>
           ))}
