@@ -68,6 +68,43 @@ export function defaultExample(groups: PlaygroundGroup[]): PlaygroundExample | u
   return groups[0]?.items[0];
 }
 
+/* ─── Manual examples ───────────────────────────────────────────── */
+
+/**
+ * Extra examples that live OUTSIDE src/(examples)/ and are wired up by hand.
+ * Each value is a path to a `page.html` in the starter repo; its slug/route is
+ * derived like the auto-discovered examples (strip `src/`, `(examples)/`,
+ * numeric prefixes and `/page.html`). They share one dropdown group, shown last.
+ */
+export const MANUAL_GROUP_LABEL = "Examples";
+export const MANUAL_PATHS: string[] = [
+  "src/todo-app/page.html",
+];
+
+/** Derive a public slug from a full repo path — e.g. "src/todo-app/page.html" → "todo-app". */
+function slugFromPath(path: string): string {
+  return path
+    .replace(/^src\//, "")
+    .replace(/^\(examples\)\//, "")
+    .replace(/\/page\.html$/, "")
+    .split("/")
+    .map(stripPrefix)
+    .filter(Boolean)
+    .join("/");
+}
+
+/** The single group holding the hand-wired MANUAL_PATHS (empty if there are none). */
+export function manualGroups(): PlaygroundGroup[] {
+  if (MANUAL_PATHS.length === 0) return [];
+  const items = MANUAL_PATHS.map((filePath): PlaygroundExample => {
+    const slug = slugFromPath(filePath);
+    const item = slug.split("/").pop() ?? slug;
+    const group = slug.includes("/") ? slug.split("/")[0] : MANUAL_GROUP_LABEL.toLowerCase();
+    return { slug, group, item, title: humanize(item), filePath };
+  });
+  return [{ slug: "manual", label: MANUAL_GROUP_LABEL, items }];
+}
+
 /* ─── Catalogue builder ─────────────────────────────────────────── */
 
 export type GitTreeEntry = { path: string; type: string };
@@ -108,7 +145,8 @@ export function buildGroups(tree: GitTreeEntry[]): PlaygroundGroup[] {
     });
   }
 
-  return [...groups.values()];
+  // Auto-discovered tutorial groups first, then the hand-wired examples.
+  return [...groups.values(), ...manualGroups()];
 }
 
 /** Build groups from a bare list of `page.html` paths (used by the snapshot fallback). */
