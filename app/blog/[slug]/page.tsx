@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import Footer from "@/components/Footer";
-import { getPost, getAllSlugs } from "@/lib/blog-posts";
+import { CodeBlock } from "@/components/CodeBlock";
+import { getPost, getAllSlugs, formatDate } from "@/lib/blog-posts";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -16,7 +18,83 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) return {};
-  return { title: post.title, description: post.excerpt };
+  return { title: post.title, description: post.description };
+}
+
+// ── Body rendering ────────────────────────────────────────────────────────────
+// Bodies are plain text with two conveniences: blank lines split paragraphs,
+// lines starting with "- " become a bullet list, and [label](href) becomes a
+// link. Text is rendered as React nodes (not raw HTML), so literal markup like
+// <if when="…"> shows through verbatim.
+
+function renderInline(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  const re = /\[([^\]]+)\]\(([^)]+)\)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let key = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) nodes.push(text.slice(last, m.index));
+    const [, label, href] = m;
+    const internal = href.startsWith("/") || href.startsWith("#");
+    nodes.push(
+      internal ? (
+        <Link key={key++} href={href} className="text-[#25C97E] hover:underline">
+          {label}
+        </Link>
+      ) : (
+        <a
+          key={key++}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#25C97E] hover:underline"
+        >
+          {label}
+        </a>
+      )
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
+
+function renderBody(body: string): ReactNode[] {
+  return body
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block, i) => {
+      const lines = block.split("\n");
+      const isList = lines.every((l) => l.trim().startsWith("- "));
+      if (isList) {
+        return (
+          <ul key={i} className="space-y-2.5 pl-1">
+            {lines.map((line, j) => (
+              <li key={j} className="flex items-start gap-3">
+                <span
+                  className="mt-1.5 w-3.5 h-3.5 rounded-full shrink-0 flex items-center justify-center"
+                  style={{ background: "rgba(37,201,126,0.15)", border: "1px solid rgba(37,201,126,0.3)" }}
+                >
+                  <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
+                    <polyline points="1.5,4 3,5.5 6.5,2" stroke="#25C97E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <span className="text-sm text-[var(--fg-2)] leading-relaxed">
+                  {renderInline(line.trim().replace(/^-\s+/, ""))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        );
+      }
+      return (
+        <p key={i} className="text-base text-[var(--fg-2)] leading-relaxed">
+          {renderInline(block)}
+        </p>
+      );
+    });
 }
 
 export default async function BlogPostPage({ params }: Props) {
@@ -85,8 +163,8 @@ export default async function BlogPostPage({ params }: Props) {
               <p className="text-xs text-[var(--fg-subtle)]">{post.author.role}</p>
             </div>
             <div className="ml-auto text-right">
-              <p className="text-sm text-[var(--fg-2)]">{post.date}</p>
-              <p className="text-xs text-[var(--fg-subtle)] font-mono">{post.readTime}</p>
+              <p className="text-sm text-[var(--fg-2)]">{formatDate(post.publishedAt)}</p>
+              <p className="text-xs text-[var(--fg-subtle)] font-mono">{post.readingTime}</p>
             </div>
           </div>
         </div>
@@ -94,102 +172,22 @@ export default async function BlogPostPage({ params }: Props) {
 
       {/* Content */}
       <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 space-y-6">
-        {post.content.map((section, i) => {
-          if (section.type === "h2") {
-            return (
+        {post.sections.map((section, i) => (
+          <section key={i} className="space-y-5">
+            {section.heading && (
               <h2
-                key={i}
                 className="text-2xl sm:text-3xl font-extrabold text-[var(--fg)] mt-12 mb-2"
                 style={{ fontFamily: "var(--font-syne)" }}
               >
-                {section.text}
+                {section.heading}
               </h2>
-            );
-          }
-          if (section.type === "h3") {
-            return (
-              <h3
-                key={i}
-                className="text-xl font-bold text-[var(--fg)] mt-8 mb-1"
-                style={{ fontFamily: "var(--font-syne)" }}
-              >
-                {section.text}
-              </h3>
-            );
-          }
-          if (section.type === "p") {
-            return (
-              <p key={i} className="text-base text-[var(--fg-2)] leading-relaxed">
-                {section.text}
-              </p>
-            );
-          }
-          if (section.type === "ul") {
-            return (
-              <ul key={i} className="space-y-2.5 pl-1">
-                {section.items?.map((item, j) => (
-                  <li key={j} className="flex items-start gap-3">
-                    <span
-                      className="mt-1.5 w-3.5 h-3.5 rounded-full shrink-0 flex items-center justify-center"
-                      style={{ background: "rgba(37,201,126,0.15)", border: "1px solid rgba(37,201,126,0.3)" }}
-                    >
-                      <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
-                        <polyline points="1.5,4 3,5.5 6.5,2" stroke="#25C97E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                    <span className="text-sm text-[var(--fg-2)] leading-relaxed">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            );
-          }
-          if (section.type === "code") {
-            return (
-              <div
-                key={i}
-                className="rounded-xl overflow-hidden border border-[var(--border)] my-6"
-                style={{ background: "#0d0d0d" }}
-              >
-                <div
-                  className="flex items-center gap-2 px-4 py-2.5 border-b"
-                  style={{ background: "#111111", borderColor: "rgba(255,255,255,0.06)" }}
-                >
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
-                  {section.lang && (
-                    <span className="ml-auto text-[10px] font-mono text-[rgba(255,255,255,0.25)] uppercase tracking-widest">
-                      {section.lang}
-                    </span>
-                  )}
-                </div>
-                <pre className="overflow-x-auto px-5 py-4 text-sm font-mono leading-relaxed text-[#e2e8f0]">
-                  <code>{section.text}</code>
-                </pre>
-              </div>
-            );
-          }
-          if (section.type === "callout") {
-            return (
-              <div
-                key={i}
-                className="flex gap-4 rounded-xl p-5 my-6"
-                style={{
-                  background: "rgba(37,201,126,0.06)",
-                  border: "1px solid rgba(37,201,126,0.2)",
-                }}
-              >
-                <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25C97E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                <p className="text-sm text-[var(--fg-2)] leading-relaxed">{section.text}</p>
-              </div>
-            );
-          }
-          return null;
-        })}
+            )}
+            {renderBody(section.body)}
+            {section.code?.trim() && (
+              <CodeBlock code={section.code} lang={section.codeLanguage || undefined} />
+            )}
+          </section>
+        ))}
 
         {/* Author card */}
         <div

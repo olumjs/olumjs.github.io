@@ -1,0 +1,153 @@
+[
+  {
+    "slug": "olumjs-guide",
+    "title": "The Complete OlumJS Guide",
+    "description": "Everything OlumJS in one place — state and reactivity, the full template syntax, components and props, lifecycle, scoped CSS, security, and the gotchas — each summarized with a code example, plus a one-screen cheat-sheet to bookmark.",
+    "publishedAt": "2026-07-11",
+    "readingTime": "12 min read",
+    "featured": true,
+    "tags": [
+      "guide",
+      "reference",
+      "documentation"
+    ],
+    "author": {
+      "name": "Kai Nakamura",
+      "avatar": "KN",
+      "color": "#25C97E",
+      "role": "Core Team"
+    },
+    "sections": [
+      {
+        "heading": "One design principle",
+        "body": "OlumJS draws a single line through its whole template syntax: is an attribute fundamentally code or a string? Native HTML already answers it — onclick=\"\" is code, class=\"\" is a string.\n\n- Code-shaped attributes — when, each, key, on*, html — take a JavaScript expression directly inside the quotes.\n- Everything else is a literal string, with {expr} for the dynamic bits.\n\nThat's the entire mental model. No naked braces, no colon-bindings, no directives to memorize. This guide walks every feature the same way: a sentence, then a snippet."
+      },
+      {
+        "heading": "Component file structure",
+        "body": "A component is one .html file with up to three parts: a <script> for logic, a scoped <style>, and the template (everything else). State, methods, and props are all in the same closure, so the template can reference them directly. Component tag names are PascalCase — that's how the compiler tells a component from a plain element.",
+        "code": "<!-- Counter.html -->\n<script>\n  const state = { count: 0 };\n  const inc = () => state.count++;\n</script>\n\n<style>\n  .counter { font-weight: 700; }\n</style>\n\n<div class=\"counter\">\n  Count: {state.count}\n  <button onclick=\"inc()\">+</button>\n</div>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "State & reactivity",
+        "body": "Declare reactive state as const state = { … }. Mutating or reassigning state re-renders the component. Only state is reactive — plain const/let variables are not tracked.",
+        "code": "<script>\n  const state = { count: 0, user: { name: \"Ann\" } };\n\n  const inc = () => state.count++;               // mutate → re-render\n  const rename = () => (state.user = { name: \"Bo\" });\n</script>\n\n<p>{state.count} — {state.user.name}</p>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Text interpolation",
+        "body": "Any {expr} in text is evaluated as JavaScript and HTML-escaped by default, so it's XSS-safe. null and undefined render as an empty string. There is no escape for a literal { — every {…} is treated as interpolation; use {String.fromCharCode(123)} if you need a literal brace.",
+        "code": "<p>Hello {state.user.name}</p>\n<p>Total: {state.items.length} items</p>\n<p>{state.count > 0 ? 'positive' : 'zero'}</p>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Watchers",
+        "body": "Declare const watcher = { … } with a function per state key. It fires whenever that key changes, receiving (oldValue, newValue) — handy for derived logging or side effects.",
+        "code": "<script>\n  const state = { count: 0, log: \"—\" };\n  const watcher = {\n    count(old, next) {\n      state.log = `count: ${old} → ${next}`;\n    },\n  };\n</script>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Conditionals: if / else-if / else",
+        "body": "when is always a JS expression. The element is physically added to or removed from the DOM as the condition changes.",
+        "code": "<if when=\"state.tab === 'a'\">\n  <p>Tab A</p>\n</if>\n<else-if when=\"state.tab === 'b'\">\n  <p>Tab B</p>\n</else-if>\n<else>\n  <p>Fallback</p>\n</else>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Show / hide",
+        "body": "Like <if>, but the element stays in the DOM and only its display is toggled. Reach for <show> when you want to preserve DOM state or avoid re-mounting cost; reach for <if> when the element should truly not exist.",
+        "code": "<show when=\"state.visible\">\n  <div class=\"panel\">Stays in the DOM; only display toggles.</div>\n</show>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Loops: for",
+        "body": "each is a JS expression with three forms — array (item of list), numeric range (i of N, where i runs 1 → N), and object keys (key in obj). When the loop body is a component, add key so instances are reused by identity across reorders instead of by position. On plain elements, key is a harmless no-op.",
+        "code": "<!-- array -->\n<for each=\"fruit of state.fruits\">\n  <li>{fruit.name}</li>\n</for>\n\n<!-- numeric range: i goes 1 → N -->\n<for each=\"i of 6\"><span>Step {i}</span></for>\n\n<!-- object keys -->\n<for each=\"key in state.settings\">\n  <div>{key}: {state.settings[key]}</div>\n</for>\n\n<!-- keyed (only matters for component loops) -->\n<for each=\"todo of state.todos\" key=\"todo.id\">\n  <TodoRow todo=\"{todo}\" />\n</for>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Events",
+        "body": "Native on* attributes hold code, just like real HTML. Use a method call, or an inline arrow that gets extracted into a method automatically. Pass the DOM event with $event. There are no event modifiers — call e.preventDefault() in the handler instead.",
+        "code": "<button onclick=\"inc()\">+</button>\n<button onclick=\"inc(), log()\">multi</button>\n<input oninput=\"(e) => state.text = e.target.value\" />\n<input oninput=\"setValue($event)\" />\n<form onsubmit=\"(e) => { e.preventDefault(); save() }\"></form>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Two-way binding",
+        "body": "There is no model attribute — bind manually with a value plus an oninput handler. Explicit, greppable, and it works for any form field.",
+        "code": "<input\n  type=\"text\"\n  value=\"{state.text}\"\n  oninput=\"(e) => state.text = e.target.value\"\n/>\n<p>Echo: {state.text}</p>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Attributes: strings vs code",
+        "body": "String attributes are the default — a literal string with {expr} inside for the dynamic parts, including inline style. Code attributes (when, each, key, on*, html) evaluate their quoted value as JavaScript.",
+        "code": "<!-- string attributes: literal + {expr} -->\n<div class=\"card {state.active ? 'is-active' : ''}\"></div>\n<a href=\"/users/{state.user.id}\" title=\"Open {state.user.name}\">Profile</a>\n<div style=\"color:{state.color}; background:{state.bg}; padding:8px;\">box</div>\n\n<!-- code attributes: value IS an expression -->\n<if when=\"state.count > 0\"> … </if>\n<button onclick=\"inc()\">+</button>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Raw HTML (opt-in)",
+        "body": "All interpolation is escaped by default. Opt out only for trusted, sanitized HTML, two ways: html=\"expr\" replaces an element's content, and olum.html(value) injects raw HTML inline inside {}. Both are deliberate, greppable bypasses.\n\nNever pass untrusted user content to html= or olum.html() — sanitize first.",
+        "code": "<!-- element-level: replaces children with raw HTML -->\n<div html=\"state.articleHtml\"></div>\n\n<!-- inline, mixed with text -->\n<p>Intro: {olum.html(state.snippetHtml)} — end.</p>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Components & props",
+        "body": "Import a child in <script> and use it by its PascalCase tag. A prop is a literal string by default; prop=\"{expr}\" passes the expression's real value and type; and {} inside text yields an interpolated string.",
+        "code": "<!-- Parent.html -->\n<script>\n  import StatusBadge from \"./StatusBadge\";\n  const state = { name: \"Ann\", score: 5 };\n</script>\n\n<StatusBadge\n  label=\"Online\"            <!-- \"Online\"  → string              -->\n  count=\"{state.score}\"     <!-- 5         → number (type kept)   -->\n  data=\"{state.user}\"       <!-- {...}     → object (type kept)   -->\n  greet=\"Hi {state.name}\"   <!-- \"Hi Ann\"  → interpolated string  -->\n/>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Reading props in the child",
+        "body": "Import props from olum and call it at the top level of <script> — no onMount required. Destructuring takes a one-time snapshot (the initial value); call props() again wherever you need the latest value after a parent re-render. Writing props().x = value (not a destructured local) propagates the change back up to the owner's state.",
+        "code": "<!-- StatusBadge.html -->\n<script>\n  import { props } from \"olum\";\n  const { label, color } = props();   // one-time snapshot (INITIAL)\n</script>\n\n<!-- call props() again for the LATEST value after a parent re-render -->\n<span class=\"badge\" style=\"color:{props().color}\">{props().label}</span>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Slots",
+        "body": "Content placed between a component's tags is exposed as children on props(). Destructuring snapshots it once; render props().children directly in the template to always reflect the latest slot content.",
+        "code": "<!-- parent -->\n<CounterCard title=\"Score\">\n  <em>passed from the parent</em>\n</CounterCard>\n\n<!-- CounterCard.html -->\n<script>\n  import { props } from \"olum\";\n</script>\n<div class=\"slot\">{props().children}</div>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Scope: public / private",
+        "body": "A component's top-level props and methods are private by default — encapsulated. Add scope keywords to the <script> tag to expose them: public (both), public-props, public-methods, and their private-* counterparts. An exclude-<name> attribute carves a single exception out of the currently open group (camelCase names become kebab-case, e.g. getAge → exclude-get-age). Attributes read left to right, so each keyword opens a group that following exclude-* attach to.",
+        "code": "<!-- No attributes → everything PRIVATE (the default) -->\n<script> … </script>\n\n<!-- Expose all props AND methods -->\n<script public> … </script>\n\n<!-- Expose props only; methods stay private -->\n<script public-props> … </script>\n\n<!-- Public props EXCEPT one; private methods EXCEPT one -->\n<script public-props exclude-state private-methods exclude-get-age> … </script>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Scoped CSS",
+        "body": "A component's <style> is automatically scoped — selectors only affect that component's own elements, so nothing leaks. Just write normal CSS.",
+        "code": "<style>\n  .title { color: #4f46e5; }   /* won't leak to other components */\n</style>\n<h1 class=\"title\">Hello</h1>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Lifecycle: onMount & host",
+        "body": "Import onMount from olum and pass a callback that runs when the component mounts; return a function from it to run cleanup on unmount (e.g. when an <if> toggles it off or a keyed item is removed). Inside onMount, host refers to this component's own root element — query within it instead of document.querySelector, which could match another instance.",
+        "code": "<script>\n  import { onMount } from \"olum\";\n\n  onMount(() => {\n    const main = host.querySelector(\"main\");   // host = this component's root\n    console.log(\"mounted\");\n    return () => console.log(\"unmounted\");     // cleanup on removal\n  });\n</script>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Escaping & security",
+        "body": "OlumJS escapes by default to prevent XSS. Every text and attribute {expr} runs through olum.esc. The only way to render raw HTML is the deliberate opt-out — html=\"expr\" or olum.html() — which you should reserve for trusted, pre-sanitized content."
+      },
+      {
+        "heading": "Common mistakes",
+        "body": "OlumJS has no naked braces and one way to do each thing. The patterns you might reach for from other frameworks don't work here:\n\n- Values for when / each / on* live inside the quotes — write when=\"x\", not when={x}\n- Bind inputs with value=\"{state.x}\" plus an oninput handler — there's no model\n- No prop shorthand or naked-brace props — write a=\"{a}\", not {a} or a={a}\n- Inline styles are a string with {expr}: style=\"color:{x}\" — not :style\n- Components are PascalCase — <Comp/>, not <comp/>\n- Any {…} in text is interpolation — for a literal brace use {String.fromCharCode(123)}\n- No event modifiers — call e.preventDefault() in the handler"
+      },
+      {
+        "heading": "Limitations to know",
+        "body": "OlumJS is deliberately small, so a few sharp edges come with it — each with a by-design workaround:\n\n- Re-renders rebuild the whole stateful component (and its children), so untracked DOM state — a playing <video>, a running animation, a focused input — is lost. Keep that reactive state in a parent and let the media/input component stay stateless.\n- There's no integrated unit-testing story yet; test plain JS logic with any external tool.\n- The global store works but is awkward: reach a component through its location key, e.g. olum.app.store[\"page>App#0\"]. For now, use one dedicated store component.",
+        "code": "<!-- ✗ state inside the media component → re-render restarts the <video> -->\n<!-- ✓ lift state to a parent, keep the media component stateless -->\n<!-- Parent.html -->\n<script>\n  const state = { count: 0 };   // re-renders the counter, not the video\n  const inc = () => state.count++;\n</script>\n<MediaBox />                     <!-- stateless → the <video> is safe -->\n<button onclick=\"inc()\">{state.count}</button>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Cheat-sheet",
+        "body": "The entire template syntax on one screen — bookmark this block.",
+        "code": "<!-- TEXT (auto-escaped) -->\n{state.value}\n{a > b ? 'x' : 'y'}\n\n<!-- RAW / UNESCAPED HTML (opt out of escaping) -->\n<div html=\"state.articleHtml\"></div>\n{olum.html(state.snippetHtml)}\n\n<!-- STRING ATTRIBUTES (literal + {expr}) -->\n<div class=\"box {state.cls}\" style=\"color:{state.color}\" title=\"Hi {state.name}\"></div>\n\n<!-- EVENTS (code in \"\") -->\n<button onclick=\"save()\">Save</button>\n<input oninput=\"(e)=> state.text = e.target.value\" />\n<form onsubmit=\"(e)=> { e.preventDefault(); submit() }\"></form>\n\n<!-- CONDITIONALS -->\n<if when=\"state.tab === 'a'\">…</if>\n<else-if when=\"state.tab === 'b'\">…</else-if>\n<else>…</else>\n\n<!-- SHOW -->\n<show when=\"state.visible\">…</show>\n\n<!-- LOOPS -->\n<for each=\"item of state.items\" key=\"item.id\"><Row item=\"{item}\" /></for>\n<for each=\"i of 6\">{i}</for>\n<for each=\"key in state.map\">{key}</for>\n\n<!-- COMPONENTS + PROPS + SLOT -->\n<Card title=\"Hi\" count=\"{n + 1}\" data=\"{state.obj}\">\n  <span>slot content → {children}</span>\n</Card>\n\n<!-- PROPS (in the child's <script>) -->\nconst { title, children } = props();  // INITIAL snapshot, no onMount needed\n{props().title}                       // LATEST value, call anywhere\n{props().children}                    // LATEST slot content\n\n<!-- host: this component's root element, inside onMount -->\nonMount(() => { host.querySelector(\"main\"); });",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Where to go next",
+        "body": "That's the whole framework, summarized. For the full detail on any topic, read the [docs](/docs); to try it hands-on, open the [Playground](/playground) and edit a live example. When you're ready to build something, the todo-app pattern — state, a list, events, and a conditional empty state — is a great first project."
+      }
+    ]
+  }
+]

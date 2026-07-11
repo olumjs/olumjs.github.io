@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { featuredPost, posts } from "@/lib/blog-posts";
+import { posts, getFeatured, getAllTags, formatDate } from "@/lib/blog-posts";
 
 export const metadata: Metadata = { title: "Blog" };
 
-const allTags = ["All", "release", "announcement", "tutorial", "guide"];
-
 export default function BlogPage() {
+  const featured = getFeatured();
+  const rest = posts.filter((p) => p.slug !== featured?.slug);
+  const allTags = ["All", ...getAllTags()];
+
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Hero header */}
@@ -35,6 +37,16 @@ export default function BlogPage() {
             Framework updates, tutorials, migration stories, and deep dives from
             the Olum team and community.
           </p>
+          {process.env.NODE_ENV === "development" && (
+            <div className="mt-6">
+              <Link
+                href="/blog/editor"
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-mono rounded-lg bg-[var(--card)] border border-[var(--border)] text-[var(--fg-2)] hover:text-[#25C97E] hover:border-[rgba(37,201,126,0.3)] transition-all"
+              >
+                + New / Edit posts
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
@@ -42,125 +54,127 @@ export default function BlogPage() {
         {/* Tag filter */}
         <div className="flex items-center gap-2 flex-wrap mb-12 overflow-x-auto pb-2">
           {allTags.map((tag, i) => (
-            <button
+            <span
               key={tag}
-              className={`px-3 py-1.5 text-xs font-mono rounded-full border transition-all ${
+              className={`px-3 py-1.5 text-xs font-mono rounded-full border ${
                 i === 0
                   ? "bg-[rgba(37,201,126,0.12)] border-[rgba(37,201,126,0.3)] text-[#25C97E]"
-                  : "bg-[var(--card)] border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--border-hover)] hover:text-[var(--fg-2)]"
+                  : "bg-[var(--card)] border-[var(--border)] text-[var(--fg-muted)]"
               }`}
             >
               {tag}
-            </button>
+            </span>
           ))}
         </div>
 
         {/* Featured post */}
-        <div className="card-glow shine group mb-10 relative rounded-2xl bg-[var(--card)] border border-[var(--border)] overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-            {/* Decorative panel */}
-            <div
-              className="relative hidden lg:block min-h-[280px]"
-              style={{
-                background: "linear-gradient(135deg, rgba(37,201,126,0.08), rgba(37,201,126,0.04))",
-              }}
-            >
+        {featured && (
+          <Link
+            href={`/blog/${featured.slug}`}
+            className="card-glow shine group mb-10 relative rounded-2xl bg-[var(--card)] border border-[var(--border)] overflow-hidden block"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+              {/* Decorative panel */}
               <div
-                className="absolute inset-0"
+                className="relative hidden lg:block min-h-[280px]"
                 style={{
-                  background:
-                    "radial-gradient(circle at 60% 40%, rgba(37,201,126,0.2), transparent 60%)",
+                  background: "linear-gradient(135deg, rgba(37,201,126,0.08), rgba(37,201,126,0.04))",
                 }}
-              />
-              {/* Floating version badge */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative">
-                  <div
-                    className="w-32 h-32 animate-float"
-                    style={{
-                      background: "#25C97E",
-                      clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-                      filter: "drop-shadow(0 0 40px rgba(37,201,126,0.4))",
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span
-                      className="text-2xl font-extrabold text-[#09090b]"
-                      style={{ fontFamily: "var(--font-syne)" }}
-                    >
-                      NEW
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute top-4 left-4">
-                <span className="text-xs font-mono text-[#25C97E] bg-[rgba(37,201,126,0.1)] border border-[rgba(37,201,126,0.2)] px-2 py-1 rounded">
-                  FEATURED
-                </span>
-              </div>
-            </div>
-
-            {/* Text */}
-            <div className="p-8 lg:p-10 flex flex-col justify-center">
-              <div className="flex items-center gap-2 flex-wrap mb-4">
-                {featuredPost.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-xs font-mono text-[var(--fg-subtle)] bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 rounded"
-                  >
-                    {tag}
-                  </span>
-                ))}
-                <span className="lg:hidden text-xs font-mono text-[#25C97E] bg-[rgba(37,201,126,0.1)] border border-[rgba(37,201,126,0.2)] px-2 py-0.5 rounded">
-                  FEATURED
-                </span>
-              </div>
-              <h2
-                className="text-2xl sm:text-3xl font-extrabold text-[var(--fg)] leading-tight mb-4 group-hover:text-[#25C97E] transition-colors"
-                style={{ fontFamily: "var(--font-syne)" }}
               >
-                {featuredPost.title}
-              </h2>
-              <p className="text-[var(--fg-muted)] leading-relaxed mb-6 line-clamp-3">
-                {featuredPost.excerpt}
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-[#09090b]"
-                    style={{ background: featuredPost.author.color }}
-                  >
-                    {featuredPost.author.avatar}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-[var(--fg)]">
-                      {featuredPost.author.name}
-                    </p>
-                    <p className="text-xs text-[var(--fg-subtle)]">
-                      {featuredPost.date} · {featuredPost.readTime}
-                    </p>
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 60% 40%, rgba(37,201,126,0.2), transparent 60%)",
+                  }}
+                />
+                {/* Floating badge */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative">
+                    <div
+                      className="w-32 h-32 animate-float"
+                      style={{
+                        background: "#25C97E",
+                        clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+                        filter: "drop-shadow(0 0 40px rgba(37,201,126,0.4))",
+                      }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span
+                        className="text-2xl font-extrabold text-[#09090b]"
+                        style={{ fontFamily: "var(--font-syne)" }}
+                      >
+                        NEW
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <Link
-                  href={`/blog/${featuredPost.slug}`}
-                  className="flex items-center gap-2 text-sm font-medium text-[#25C97E] hover:text-[#25C97E] transition-colors"
+                <div className="absolute top-4 left-4">
+                  <span className="text-xs font-mono text-[#25C97E] bg-[rgba(37,201,126,0.1)] border border-[rgba(37,201,126,0.2)] px-2 py-1 rounded">
+                    FEATURED
+                  </span>
+                </div>
+              </div>
+
+              {/* Text */}
+              <div className="p-8 lg:p-10 flex flex-col justify-center">
+                <div className="flex items-center gap-2 flex-wrap mb-4">
+                  {featured.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs font-mono text-[var(--fg-subtle)] bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 rounded"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  <span className="lg:hidden text-xs font-mono text-[#25C97E] bg-[rgba(37,201,126,0.1)] border border-[rgba(37,201,126,0.2)] px-2 py-0.5 rounded">
+                    FEATURED
+                  </span>
+                </div>
+                <h2
+                  className="text-2xl sm:text-3xl font-extrabold text-[var(--fg)] leading-tight mb-4 group-hover:text-[#25C97E] transition-colors"
+                  style={{ fontFamily: "var(--font-syne)" }}
                 >
-                  Read more
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M2 7h10M8 3l4 4-4 4" />
-                  </svg>
-                </Link>
+                  {featured.title}
+                </h2>
+                <p className="text-[var(--fg-muted)] leading-relaxed mb-6 line-clamp-3">
+                  {featured.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-[#09090b]"
+                      style={{ background: featured.author.color }}
+                    >
+                      {featured.author.avatar}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[var(--fg)]">
+                        {featured.author.name}
+                      </p>
+                      <p className="text-xs text-[var(--fg-subtle)]">
+                        {formatDate(featured.publishedAt)} · {featured.readingTime}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="flex items-center gap-2 text-sm font-medium text-[#25C97E]">
+                    Read more
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M2 7h10M8 3l4 4-4 4" />
+                    </svg>
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </Link>
+        )}
 
         {/* Post grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post, i) => (
+          {rest.map((post) => (
             <Link
               href={`/blog/${post.slug}`}
-              key={i}
+              key={post.slug}
               className="card-glow shine group flex flex-col gap-4 p-6 rounded-2xl bg-[var(--card)] border border-[var(--border)]"
             >
               {/* Tags */}
@@ -185,7 +199,7 @@ export default function BlogPage() {
 
               {/* Excerpt */}
               <p className="text-sm text-[var(--fg-muted)] leading-relaxed line-clamp-3 flex-1">
-                {post.excerpt}
+                {post.description}
               </p>
 
               {/* Footer */}
@@ -202,13 +216,12 @@ export default function BlogPage() {
                   </span>
                 </div>
                 <span className="text-xs text-[var(--fg-subtle)] font-mono shrink-0">
-                  {post.readTime}
+                  {post.readingTime}
                 </span>
               </div>
             </Link>
           ))}
         </div>
-
       </div>
 
       <Footer />
