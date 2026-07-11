@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { getDocsNav } from "@/lib/docs-content";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { siteConfig } from "@/lib/site-config";
@@ -143,6 +144,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider>
           <Navbar navGroups={navGroups} />
           {children}
+          <AnalyticsTracker />
         </ThemeProvider>
         {/* JSON-LD structured data (Organization + WebSite + SoftwareApplication) */}
         <script

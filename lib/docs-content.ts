@@ -109,6 +109,29 @@ function ghHeaders(): HeadersInit {
   return h;
 }
 
+// `next build` fans out across many workers that hit GitHub concurrently, and
+// undici's default 10s connect timeout is easy to trip when the CDN is slow —
+// a single thrown UND_ERR_CONNECT_TIMEOUT would otherwise fail the whole build.
+// These are transient, so retry the *thrown* network/timeout errors (HTTP
+// statuses are meaningful to callers and pass through untouched). The `next`
+// cache options are preserved, so a successful attempt still caches normally.
+const FETCH_RETRIES = 3;
+async function ghFetch(url: string, init?: RequestInit & { next?: { revalidate?: number; tags?: string[] } }): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= FETCH_RETRIES; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      lastErr = err;
+      if (attempt < FETCH_RETRIES) {
+        const backoff = 500 * 2 ** attempt; // 0.5s, 1s, 2s
+        await new Promise((r) => setTimeout(r, backoff));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 // Thrown when a branch simply has no `docs/` folder — a normal "no docs here"
 // state (not an error), handled gracefully by the per-branch loaders.
 class DocsDirNotFound extends Error {}
@@ -118,7 +141,7 @@ async function fetchDocsDir(repo: string, ref?: string): Promise<GhContentItem[]
   const url = ref
     ? `https://api.github.com/repos/${repo}/contents/docs?ref=${encodeURIComponent(ref)}`
     : `https://api.github.com/repos/${repo}/contents/docs`;
-  const res = await fetch(url, {
+  const res = await ghFetch(url, {
     headers: ghHeaders(),
     next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] },
   });
@@ -130,7 +153,7 @@ async function fetchDocsDir(repo: string, ref?: string): Promise<GhContentItem[]
 }
 
 function fetchRaw(url: string, label: string): Promise<string> {
-  return fetch(url, { next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] } }).then((r) => {
+  return ghFetch(url, { next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] } }).then((r) => {
     if (!r.ok) throw new Error(`Failed to fetch ${label}: ${r.status}`);
     return r.text();
   });
@@ -146,7 +169,7 @@ async function fetchLastModified(repo: string, path: string, ref?: string): Prom
   const params = new URLSearchParams({ path, per_page: "1" });
   if (ref) params.set("sha", ref);
   try {
-    const res = await fetch(`https://api.github.com/repos/${repo}/commits?${params}`, {
+    const res = await ghFetch(`https://api.github.com/repos/${repo}/commits?${params}`, {
       headers: ghHeaders(),
       next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] },
     });
@@ -198,7 +221,7 @@ export function isVersionAllowed(repo: string, branch: string): boolean {
 
 // All branch names for a repo (for the version dropdown).
 export const getBranches = cache(async (repo: string): Promise<string[]> => {
-  const res = await fetch(`https://api.github.com/repos/${repo}/branches?per_page=100`, {
+  const res = await ghFetch(`https://api.github.com/repos/${repo}/branches?per_page=100`, {
     headers: ghHeaders(),
     next: { revalidate: DOCS_REVALIDATE, tags: [DOCS_TAG] },
   });
