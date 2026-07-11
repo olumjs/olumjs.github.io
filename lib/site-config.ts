@@ -1,21 +1,4 @@
-const FALLBACK_URL = "https://olumjs.top";
-
-// Guard against a missing OR malformed NEXT_PUBLIC_SITE_URL. This value flows
-// into `new URL(...)` (layout metadataBase), and because it's a NEXT_PUBLIC_
-// var it's inlined into the client bundle — so an invalid value like a bare
-// number would throw "Invalid URL" during module evaluation in the browser and
-// take down the whole site. Fall back to the canonical URL instead.
-function resolveSiteUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  if (!raw) return FALLBACK_URL;
-  try {
-    return new URL(raw).toString().replace(/\/$/, "");
-  } catch {
-    return FALLBACK_URL;
-  }
-}
-
-const siteUrl = resolveSiteUrl();
+const siteUrl = "https://olumjs.top";
 
 export const siteConfig = {
   name: "OlumJS",

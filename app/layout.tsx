@@ -61,9 +61,6 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true },
   },
-  ...(process.env.GOOGLE_SITE_VERIFICATION && {
-    verification: { google: process.env.GOOGLE_SITE_VERIFICATION },
-  }),
 };
 
 export const viewport: Viewport = {
