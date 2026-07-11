@@ -15,7 +15,7 @@ const links = {
   Community: [
     { label: "GitHub", href: "https://github.com/olumjs" },
     { label: "Bluesky", href: "https://bsky.app/profile/olumjs.bsky.social" },
-    // { label: "Blog", href: "/blog" },
+    { label: "Blog", href: "/blog" },
   ],
   Resources: [
     { label: "Docs", href: "/docs" },

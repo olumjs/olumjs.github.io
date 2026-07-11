@@ -2,6 +2,7 @@ import { siteConfig } from "@/lib/site-config";
 import { getDocOrder, getDocDates } from "@/lib/docs-content";
 import { getPlaygroundGroups } from "@/lib/playground-examples.server";
 import { flattenExamples } from "@/lib/playground-examples";
+import { getAllSlugs } from "@/lib/blog-posts";
 
 const today = new Date().toISOString().split("T")[0];
 
@@ -26,6 +27,18 @@ export async function GET() {
       url: `${siteConfig.url}/playground/${ex.slug}`,
       changefreq: "monthly",
       priority: i === 0 ? "0.9" : "0.7",
+      lastmod: today,
+    })),
+    {
+      url: `${siteConfig.url}/blog`,
+      changefreq: "weekly",
+      priority: "0.8",
+      lastmod: today,
+    },
+    ...getAllSlugs().map((slug) => ({
+      url: `${siteConfig.url}/blog/${slug}`,
+      changefreq: "monthly",
+      priority: "0.7",
       lastmod: today,
     })),
   ];

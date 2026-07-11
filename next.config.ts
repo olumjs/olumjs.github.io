@@ -13,8 +13,6 @@ const nextConfig: NextConfig = {
       /* offline/rate-limited — keep the fallback */
     }
     return [
-      { source: "/blog", destination: "/", permanent: false },
-      { source: "/blog/:slug*", destination: "/", permanent: false },
       { source: "/playground", destination: `/playground/${defaultSlug}`, permanent: false },
     ];
   },

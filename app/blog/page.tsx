@@ -5,7 +5,7 @@ import { featuredPost, posts } from "@/lib/blog-posts";
 
 export const metadata: Metadata = { title: "Blog" };
 
-const allTags = ["All", "release", "tutorial", "guide", "signals", "internals", "migration", "typescript", "ssr"];
+const allTags = ["All", "release", "announcement", "tutorial", "guide"];
 
 export default function BlogPage() {
   return (
@@ -88,7 +88,7 @@ export default function BlogPage() {
                       className="text-2xl font-extrabold text-[#09090b]"
                       style={{ fontFamily: "var(--font-syne)" }}
                     >
-                      v2.0
+                      NEW
                     </span>
                   </div>
                 </div>
@@ -209,15 +209,6 @@ export default function BlogPage() {
           ))}
         </div>
 
-        {/* Load more */}
-        <div className="text-center mt-14">
-          <button className="inline-flex items-center gap-2 px-8 py-3 text-sm font-medium text-[var(--fg-2)] bg-[var(--card)] border border-[var(--border)] rounded-xl hover:border-[var(--border-hover)] hover:text-[var(--fg)] transition-all">
-            Load more posts
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M7 2v10M3 8l4 4 4-4" />
-            </svg>
-          </button>
-        </div>
       </div>
 
       <Footer />
