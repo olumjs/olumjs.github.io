@@ -4,18 +4,17 @@
     "title": "The Complete OlumJS Guide",
     "description": "Everything OlumJS in one place — state and reactivity, the full template syntax, components and props, lifecycle, scoped CSS, security, and the gotchas — each summarized with a code example, plus a one-screen cheat-sheet to bookmark.",
     "publishedAt": "2026-07-11",
-    "readingTime": "12 min read",
-    "featured": true,
+    "readingTime": "7 min read",
     "tags": [
       "guide",
       "reference",
       "documentation"
     ],
     "author": {
-      "name": "Kai Nakamura",
-      "avatar": "KN",
+      "name": "Eissa Saber",
+      "avatar": "ES",
       "color": "#25C97E",
-      "role": "Core Team"
+      "role": "Creator of Olumjs"
     },
     "sections": [
       {
@@ -149,5 +148,84 @@
         "body": "That's the whole framework, summarized. For the full detail on any topic, read the [docs](/docs); to try it hands-on, open the [Playground](/playground) and edit a live example. When you're ready to build something, the todo-app pattern — state, a list, events, and a conditional empty state — is a great first project."
       }
     ]
+  },
+  {
+    "slug": "why-olumjs",
+    "title": "What Is OlumJS, and Why Does It Exist?",
+    "description": "The honest story behind OlumJS — a tiny framework for building SPAs with nothing but HTML, CSS, and vanilla JavaScript. What it is, why I built it, who it's for, when to use it (and when not to), its core idea, and the ecosystem around it.",
+    "publishedAt": "2026-07-11",
+    "readingTime": "8 min read",
+    "tags": [
+      "philosophy",
+      "vanilla-js",
+      "story"
+    ],
+    "author": {
+      "name": "Eissa Saber",
+      "avatar": "ES",
+      "color": "#06b6d4",
+      "role": "Creator of OlumJS"
+    },
+    "sections": [
+      {
+        "heading": "The short version",
+        "body": "OlumJS is a tiny JavaScript framework that lets you build single-page apps with nothing but the basics — real HTML, CSS, and vanilla JavaScript. A component isn't a special file format; it's an ordinary .html file. There's no virtual DOM, no new language to learn, and the whole runtime is about 8 kb.\n\nIt exists for one kind of moment: you have an idea and you want to prove it — fast. This is the story of what Olum is, why I built it, and when you should (and shouldn't) reach for it."
+      },
+      {
+        "heading": "First, the name",
+        "body": "Let's get the awkward part out of the way. \"Olum\" comes from a Turkish TV series, and — unfortunately — it means \"death.\" Not exactly the friendliest name for a framework. But it stuck, and I've made peace with it. The name is the least interesting thing about the project; what it stands for is what matters."
+      },
+      {
+        "heading": "The VanillaJS developer's platform",
+        "body": "That tagline means a lot to me, because I fall back to basics all the time. Why learn every framework and technology out there when the basics I already know — HTML, CSS, vanilla JavaScript — can build the same apps? Frameworks come and go; the basics have been here forever and aren't going anywhere.\n\nWhat I always wanted was a way to keep writing vanilla and still get the benefits of a modern SPA — components, routing, reactivity — without signing up for a whole framework's world. That thing didn't exist. So I decided to make it exist, and that's how OlumJS started."
+      },
+      {
+        "heading": "How Olum actually started",
+        "body": "I started this project about five years ago. I'd tried React, Vue, and Angular, but I always came back to vanilla — it makes me feel unlimited. Every framework has its benefits and its limits, so why box myself in when vanilla never does? Yes, vanilla has the scalability problem, I know. But it never tells you no.\n\nThe turning point was 2020, working at an ebook company. I had a team lead I learned a huge amount from — including a set of utility functions he wrote to make our work easier, and a $ helper a lot like jQuery. I started writing my own utils, beginning with that $ function, and kept expanding them.\n\nI was building their [miniapps platform](https://www.kotobee.com/en/miniapps) at the time. One day I watched a miniapp get injected straight into the ebook reader's DOM — fully encapsulated, with its own scoped HTML, CSS, and JS, without touching the reader around it. That's a component — but pure vanilla. So I improved it a little: I figured out a simple router that renders component A at \"/\" and component B at \"/about\", wired it to those components, and at some point realized I'd accidentally built a small, fully-vanilla framework."
+      },
+      {
+        "heading": "Why Olum over React, Vue, or Svelte?",
+        "body": "Here's my honest answer. Olum is plain text by about 90%. The component is literally an HTML file, so your editor already knows what to do with it — native formatting, native syntax highlighting, no editor extension to install, and no browser devtool extension to keep compatible across Chrome, Firefox, and the rest. It gets out of your way.\n\nAnd I'll be just as honest about the limits. Olum has no virtual DOM — that's a deliberate choice, because my goal was small apps, not large ones, so I didn't take that on. The framework closest to Olum is probably Svelte. Funny thing: I only discovered Svelte after I'd built Olum. If I'd known about it earlier, I might never have made Olum at all. But even today some of Svelte's syntax rubs me the wrong way — its if-blocks and loops make me feel like I'm writing a bash script. Olum keeps the template feeling like HTML, and that's the difference I care about."
+      },
+      {
+        "heading": "It's just HTML — and that's the whole point",
+        "body": "I wanted to remind developers of the basics, because the basics are forever and frameworks always change. So Olum stays as close to plain HTML, CSS, and JS as I can keep it. An HTML file can already hold all three languages — so why invent a .olum extension? Use a real .html file. I'm trying to introduce a solution, not add a new problem.\n\nThe one rule that falls out of this: is an attribute code or a string? Native HTML already answers it — onclick is code, class is a string. Olum just follows that. Here's a whole component:",
+        "code": "<script>\n  const state = { count: 0 };\n  const inc = () => state.count++;\n</script>\n\n<style>\n  button { font-weight: 700; }\n</style>\n\n<button onclick=\"inc()\">clicked {state.count} times</button>",
+        "codeLanguage": "html"
+      },
+      {
+        "heading": "Who Olum is for",
+        "body": "Olum is for anyone — including beginners who've only just learned HTML, CSS, and a bit of JavaScript. Because it's about 90% vanilla, there's almost nothing new to memorize. If you have an idea and want to try it out, Olum is the choice.\n\nWho is it not for, honestly? Anyone building a medium-to-large application or shipping to production. That's simply not what it's built for — and I'd rather say so plainly than have you find out the hard way."
+      },
+      {
+        "heading": "When to use it — and when not to",
+        "body": "Reach for Olum on small projects: hackathons, prototypes, experiments, and side projects. It's designed to turn a sudden idea into a small, working app so you can prove the concept quickly. Every developer has a graveyard of side projects, and the small ones are a perfect fit.\n\nWhen should you not use Olum? For anything from medium-scale up, or anything production-bound, I'd point you to Svelte instead. Use the right tool for the job — for the small, throwaway-fast stuff, that tool is Olum."
+      },
+      {
+        "heading": "The core idea",
+        "body": "If there's a single pillar, it's this: if you know HTML, CSS, and a little vanilla JavaScript, you already know Olum. That's the entire reason it exists — you shouldn't have to spend hours learning a new framework when the basics you already have are more than enough to start.\n\nEverything else follows from that. Components are real .html files with scoped styles. You update the UI by mutating a state object. The template stays HTML. And again — it's meant for small apps and prototypes, so the whole thing is tuned to keep you moving, not to scale to millions of nodes."
+      },
+      {
+        "heading": "How it works under the hood",
+        "body": "Olum leans on a compiler. The core is deliberately tiny — it builds the tree and handles events, the store, and the hooks. The compiler does the majority of the work: it turns each .html component into a real JavaScript module ahead of time, which is exactly why the runtime can stay so small.\n\nThe router is file-system based. It scans your directories for page.html files and builds a route map, handling routing the classic way under the hood. It doesn't cover every case yet, but it works:",
+        "code": "src/\n  page.html              →  /\n  about/\n    page.html            →  /about\n  blog/\n    page.html            →  /blog\n    [slug]/\n      page.html          →  /blog/:slug",
+        "codeLanguage": ""
+      },
+      {
+        "heading": "The ecosystem",
+        "body": "Olum is a small constellation of pieces, and it's a solo project today:\n\n- Core (olum@0.7.0) — builds the tree and handles events, the store, and hooks. It stays tiny because the compiler carries the load.\n- Compiler (olum-compiler@1.1.0) — compiles each .html component into a real JS module. It's the heart of the system and does most of the work.\n- Router (olum-router@0.4.0) — file-system routing: directories plus page.html files become your routes. It works today and is still growing.\n- DevTool — not fully ready, but usable. It injects straight into your app when you enable it from the UI or the console — no browser extension, no cross-browser compatibility headaches.\n- VS Code extension — optional, since a component is just an HTML file. Install it and it adds snippets and highlights the logic bits like <if> and <for>, so you can tell real HTML apart from Olum logic at a glance.\n- Playground — the fastest way to try Olum online, with plenty of examples inspired by Svelte's playground.\n\nThe project rests on three pillars: olum@0.7.0 (core), olum-router@0.4.0, and olum-compiler@1.1.0."
+      },
+      {
+        "heading": "Try it in 30 seconds",
+        "body": "There are two fast ways in. Online, open the [Playground](/playground) and start editing a live example — no install. Locally, scaffold a project with one command:",
+        "code": "# scaffold a new project locally\nnpx create-olum app-name\n\n# or try it online with zero install:\n# https://olumjs.top/playground",
+        "codeLanguage": "bash"
+      },
+      {
+        "heading": "Where Olum is going",
+        "body": "The vision is simple, and a little stubborn: stay focused on the basics, and keep the current vanilla syntax untouched. I might add to it, but I won't change what's already there — which means if you use Olum today and come back in a few years, there'll be no migration guide waiting for you. Your code will still work.\n\nDown the road I may add a diffing system at the compiler level to handle medium-scale apps, if it comes to that. But for the small apps Olum is made for, re-rendering the whole (tiny) DOM on a state change is perfectly fine — the DOM is small, so diffing just isn't something you need yet.\n\nIf any of this resonates — if you've ever wanted to just build the thing without adopting a framework's entire universe — give Olum a try. Start with the [Playground](/playground), or read the [complete guide](/blog/olumjs-guide)."
+      }
+    ],
+    "featured": true
   }
 ]

@@ -204,7 +204,7 @@ export default async function BlogPostPage({ params }: Props) {
             <p className="font-bold text-[var(--fg)]" style={{ fontFamily: "var(--font-syne)" }}>
               {post.author.name}
             </p>
-            <p className="text-sm text-[var(--fg-muted)]">{post.author.role} · Olum Team</p>
+            <p className="text-sm text-[var(--fg-muted)]">{post.author.role}</p>
           </div>
         </div>
 
