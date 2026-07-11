@@ -5,9 +5,20 @@ import { posts, getFeatured, getAllTags, formatDate } from "@/lib/blog-posts";
 
 export const metadata: Metadata = { title: "Blog" };
 
-export default function BlogPage() {
-  const featured = getFeatured();
-  const rest = posts.filter((p) => p.slug !== featured?.slug);
+type Props = { searchParams: Promise<{ tag?: string }> };
+
+export default async function BlogPage({ searchParams }: Props) {
+  const { tag } = await searchParams;
+  const activeTag = tag?.trim() || null;
+
+  const filtered = activeTag
+    ? posts.filter((p) => p.tags.some((t) => t.toLowerCase() === activeTag.toLowerCase()))
+    : posts;
+
+  // Featured is the flagged post when it's in the filtered set, else the first match.
+  const flagged = getFeatured();
+  const featured = filtered.find((p) => p.slug === flagged?.slug) ?? filtered[0] ?? null;
+  const rest = filtered.filter((p) => p.slug !== featured?.slug);
   const allTags = ["All", ...getAllTags()];
 
   return (
@@ -53,18 +64,24 @@ export default function BlogPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         {/* Tag filter */}
         <div className="flex items-center gap-2 flex-wrap mb-12 overflow-x-auto pb-2">
-          {allTags.map((tag, i) => (
-            <span
-              key={tag}
-              className={`px-3 py-1.5 text-xs font-mono rounded-full border ${
-                i === 0
-                  ? "bg-[rgba(37,201,126,0.12)] border-[rgba(37,201,126,0.3)] text-[#25C97E]"
-                  : "bg-[var(--card)] border-[var(--border)] text-[var(--fg-muted)]"
-              }`}
-            >
-              {tag}
-            </span>
-          ))}
+          {allTags.map((t) => {
+            const isAll = t === "All";
+            const active = isAll ? !activeTag : activeTag?.toLowerCase() === t.toLowerCase();
+            return (
+              <Link
+                key={t}
+                href={isAll ? "/blog" : `/blog?tag=${encodeURIComponent(t)}`}
+                scroll={false}
+                className={`px-3 py-1.5 text-xs font-mono rounded-full border transition-all ${
+                  active
+                    ? "bg-[rgba(37,201,126,0.12)] border-[rgba(37,201,126,0.3)] text-[#25C97E]"
+                    : "bg-[var(--card)] border-[var(--border)] text-[var(--fg-muted)] hover:text-[var(--fg-2)] hover:border-[var(--border-hover)]"
+                }`}
+              >
+                {t}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Featured post */}
@@ -222,6 +239,17 @@ export default function BlogPage() {
             </Link>
           ))}
         </div>
+
+        {/* Empty state */}
+        {filtered.length === 0 && (
+          <p className="text-center text-[var(--fg-muted)] py-16">
+            No posts tagged{" "}
+            <span className="text-[var(--fg)] font-medium">{activeTag}</span>.{" "}
+            <Link href="/blog" className="text-[#25C97E] hover:underline">
+              View all posts
+            </Link>
+          </p>
+        )}
       </div>
 
       <Footer />

@@ -282,6 +282,7 @@ const navLinks: { href: string; label: string; external?: boolean; reload?: bool
   // `reload` forces a full page load so the playground's cross-origin isolation
   // headers apply (WebContainers needs SharedArrayBuffer). See Playground.tsx.
   { href: "/playground", label: "Playground", reload: true },
+  { href: "/blog", label: "Blog" },
 ];
 
 export default function Navbar({ navGroups }: { navGroups: SidebarGroup[] }) {
