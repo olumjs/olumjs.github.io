@@ -5,6 +5,12 @@ import type { ReactNode } from "react";
 import Footer from "@/components/Footer";
 import { CodeBlock } from "@/components/CodeBlock";
 import { getPost, getAllSlugs, formatDate } from "@/lib/blog-posts";
+import { getBlogViewsBySlug } from "@/lib/analytics";
+import BlogViews from "@/components/BlogViews";
+
+// Re-render at most once a minute so the view count stays fresh without
+// making the (otherwise static) post pages dynamic.
+export const revalidate = 60;
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -101,6 +107,7 @@ export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) notFound();
+  const views = await getBlogViewsBySlug(slug);
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -164,7 +171,10 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
             <div className="ml-auto text-right">
               <p className="text-sm text-[var(--fg-2)]">{formatDate(post.publishedAt)}</p>
-              <p className="text-xs text-[var(--fg-subtle)] font-mono">{post.readingTime}</p>
+              <div className="flex items-center justify-end gap-2.5">
+                <p className="text-xs text-[var(--fg-subtle)] font-mono">{post.readingTime}</p>
+                <BlogViews views={views} />
+              </div>
             </div>
           </div>
         </div>

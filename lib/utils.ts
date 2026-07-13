@@ -6,6 +6,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Compact a view count for display (e.g. 1250 -> "1.3k", 1000 -> "1k").
+export function formatViews(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return String(n);
+}
+
 // Turn a heading's text into a URL-safe anchor id (e.g. "The one rule" -> "the-one-rule").
 export function slugify(text: string) {
   return text

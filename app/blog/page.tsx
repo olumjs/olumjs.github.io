@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { posts, getFeatured, getAllTags, formatDate } from "@/lib/blog-posts";
+import { getAllBlogViews } from "@/lib/analytics";
+import BlogViews from "@/components/BlogViews";
 
 export const metadata: Metadata = { title: "Blog" };
 
@@ -10,6 +12,7 @@ type Props = { searchParams: Promise<{ tag?: string }> };
 export default async function BlogPage({ searchParams }: Props) {
   const { tag } = await searchParams;
   const activeTag = tag?.trim() || null;
+  const blogViews = await getAllBlogViews();
 
   const filtered = activeTag
     ? posts.filter((p) => p.tags.some((t) => t.toLowerCase() === activeTag.toLowerCase()))
@@ -169,8 +172,9 @@ export default async function BlogPage({ searchParams }: Props) {
                       <p className="text-sm font-medium text-[var(--fg)]">
                         {featured.author.name}
                       </p>
-                      <p className="text-xs text-[var(--fg-subtle)]">
+                      <p className="text-xs text-[var(--fg-subtle)] flex items-center gap-2">
                         {formatDate(featured.publishedAt)} · {featured.readingTime}
+                        <BlogViews views={blogViews[featured.slug] ?? 0} />
                       </p>
                     </div>
                   </div>
@@ -232,9 +236,12 @@ export default async function BlogPage({ searchParams }: Props) {
                     {post.author.name}
                   </span>
                 </div>
-                <span className="text-xs text-[var(--fg-subtle)] font-mono shrink-0">
-                  {post.readingTime}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-[var(--fg-subtle)] font-mono">
+                    {post.readingTime}
+                  </span>
+                  <BlogViews views={blogViews[post.slug] ?? 0} />
+                </div>
               </div>
             </Link>
           ))}

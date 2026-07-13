@@ -154,7 +154,7 @@
     "title": "What Is OlumJS, and Why Does It Exist?",
     "description": "The honest story behind OlumJS — a tiny framework for building SPAs with nothing but HTML, CSS, and vanilla JavaScript. What it is, why I built it, who it's for, when to use it (and when not to), its core idea, and the ecosystem around it.",
     "publishedAt": "2026-07-11",
-    "readingTime": "8 min read",
+    "readingTime": "7 min read",
     "tags": [
       "philosophy",
       "vanilla-js",
@@ -163,7 +163,7 @@
     "author": {
       "name": "Eissa Saber",
       "avatar": "ES",
-      "color": "#06b6d4",
+      "color": "#25C97E",
       "role": "Creator of OlumJS"
     },
     "sections": [
@@ -185,7 +185,7 @@
       },
       {
         "heading": "Why Olum over React, Vue, or Svelte?",
-        "body": "Here's my honest answer. Olum is plain text by about 90%. The component is literally an HTML file, so your editor already knows what to do with it — native formatting, native syntax highlighting, no editor extension to install, and no browser devtool extension to keep compatible across Chrome, Firefox, and the rest. It gets out of your way.\n\nAnd I'll be just as honest about the limits. Olum has no virtual DOM — that's a deliberate choice, because my goal was small apps, not large ones, so I didn't take that on. The framework closest to Olum is probably Svelte. Funny thing: I only discovered Svelte after I'd built Olum. If I'd known about it earlier, I might never have made Olum at all. But even today some of Svelte's syntax rubs me the wrong way — its if-blocks and loops make me feel like I'm writing a bash script. Olum keeps the template feeling like HTML, and that's the difference I care about."
+        "body": "Here's my honest answer. Olum is plain text by about 90%. The component is literally an HTML file, so your editor already knows what to do with it — native formatting, native syntax highlighting, no editor extension to install, and no browser devtool extension to keep compatible across Chrome, Firefox, and the rest. It gets out of your way.\n\nAnd I'll be just as honest about the limits. Olum has no virtual DOM — that's a deliberate choice, because my goal was small apps, not large ones, so I didn't take that on. The framework closest to Olum is probably Svelte. Funny thing: I only discovered Svelte after I'd built Olum. If I'd known about it earlier, I might never have made Olum at all. But even today some of Svelte's syntax rubs me the wrong way — its if-blocks and loops make me feel confused. Olum keeps the template feeling like HTML, and that's the difference I care about."
       },
       {
         "heading": "It's just HTML — and that's the whole point",

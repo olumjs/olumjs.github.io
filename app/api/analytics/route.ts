@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebaseAdmin";
-
-// Dedicated collection for this site. Kept distinct from other projects that
-// share the same Firebase Realtime Database so their data never collides.
-const COL = "olum-analytics";
+import { ANALYTICS_COL as COL } from "@/lib/analytics";
 
 // GET /api/analytics?pw=<password>
 // Returns the raw visit log for the dashboard. If ANALYTICS_PASSWORD is set,

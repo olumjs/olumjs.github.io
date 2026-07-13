@@ -451,12 +451,16 @@ export default function AnalyticsDashboard() {
     setVisitsSearch("");
   };
 
-  // Close fullscreen on Escape
+  // Close fullscreen on Escape; lock page scroll while fullscreen
   useEffect(() => {
     if (!visitsFullscreen) return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setVisitsFullscreen(false); };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handler);
+      document.documentElement.style.overflow = "";
+    };
   }, [visitsFullscreen]);
 
   const wrap = (content: React.ReactNode) => (
