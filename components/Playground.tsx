@@ -9,6 +9,7 @@ import {
   examplePreviewPath,
   findExample,
   defaultExample,
+  openFileList,
 } from "@/lib/playground-examples";
 
 /* ─── Examples dropdown ─────────────────────────────────────── */
@@ -109,10 +110,11 @@ export default function Playground({
   const [slug, setSlug] = useState(initialSlug);
   const [ready, setReady] = useState(false);
 
-  // Look up the editor file (e.g. src/(examples)/00-introduction/00-hello-world/page.html)
-  // for a slug from the catalogue passed in from the server.
-  const fileOf = useCallback(
-    (s: string) => findExample(groups, s)?.filePath,
+  // Look up the editor files to open for a slug — every file in the example's
+  // folder as a comma-separated list, so StackBlitz opens them all as tabs
+  // (page.html active). See openFileList / @stackblitz/sdk OpenFileOption.
+  const filesOf = useCallback(
+    (s: string) => openFileList(findExample(groups, s)),
     [groups],
   );
 
@@ -175,7 +177,7 @@ export default function Playground({
     sdk
       .embedGithubProject(target, STARTER_REPO_SLUG, {
         forceEmbedLayout: true,
-        openFile: fileOf(initialSlug),
+        openFile: filesOf(initialSlug),
         view: "default",
         theme: embedTheme,
         hideNavigation: true,
@@ -220,12 +222,12 @@ export default function Playground({
     // Update the URL in place — no Next navigation, so the iframe stays mounted.
     window.history.pushState(null, "", `/playground/${next}`);
     const vm = vmRef.current;
-    const file = fileOf(next);
-    if (vm && file) {
-      vm.editor.openFile(file).catch(() => {});
+    const files = filesOf(next);
+    if (vm && files) {
+      vm.editor.openFile(files).catch(() => {});
       navigatePreview();
     }
-  }, [fileOf, navigatePreview]);
+  }, [filesOf, navigatePreview]);
 
   // Keep the selected example in sync with the browser's back/forward buttons.
   useEffect(() => {
@@ -238,8 +240,9 @@ export default function Playground({
       slugRef.current = ex.slug;
       setSlug(ex.slug);
       const vm = vmRef.current;
-      if (vm) {
-        vm.editor.openFile(ex.filePath).catch(() => {});
+      const files = openFileList(ex);
+      if (vm && files) {
+        vm.editor.openFile(files).catch(() => {});
         navigatePreview();
       }
     }

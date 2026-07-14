@@ -18,8 +18,14 @@ export type PlaygroundExample = {
   item: string;
   /** Human title for the dropdown, e.g. "Hello world". */
   title: string;
-  /** File to open in StackBlitz, e.g. src/(examples)/00-introduction/00-hello-world/page.html */
+  /** Entry file, e.g. src/(examples)/00-introduction/00-hello-world/page.html */
   filePath: string;
+  /**
+   * Every file in the example's folder, `page.html` first, so StackBlitz can
+   * open them all as tabs (page.html active). Always non-empty and always leads
+   * with `filePath`. In the snapshot/manual fallbacks this is just `[filePath]`.
+   */
+  filePaths: string[];
 };
 
 export type PlaygroundGroup = { slug: string; label: string; items: PlaygroundExample[] };
@@ -68,6 +74,16 @@ export function defaultExample(groups: PlaygroundGroup[]): PlaygroundExample | u
   return groups[0]?.items[0];
 }
 
+/**
+ * StackBlitz `openFile` value that opens every file in an example's folder as
+ * tabs (page.html active). A comma-separated string opens one tab per file; see
+ * @stackblitz/sdk OpenFileOption. Falls back to the single entry file.
+ */
+export function openFileList(ex: PlaygroundExample | undefined): string | undefined {
+  if (!ex) return undefined;
+  return (ex.filePaths.length ? ex.filePaths : [ex.filePath]).join(",");
+}
+
 /* ─── Manual examples ───────────────────────────────────────────── */
 
 /**
@@ -100,7 +116,7 @@ export function manualGroups(): PlaygroundGroup[] {
     const slug = slugFromPath(filePath);
     const item = slug.split("/").pop() ?? slug;
     const group = slug.includes("/") ? slug.split("/")[0] : MANUAL_GROUP_LABEL.toLowerCase();
-    return { slug, group, item, title: humanize(item), filePath };
+    return { slug, group, item, title: humanize(item), filePath, filePaths: [filePath] };
   });
   return [{ slug: "manual", label: MANUAL_GROUP_LABEL, items }];
 }
@@ -114,19 +130,30 @@ export function buildGroups(tree: GitTreeEntry[]): PlaygroundGroup[] {
   const prefix = `${EXAMPLES_ROOT}/`;
   // GitHub returns the tree path-sorted, so the numeric prefixes already yield
   // the intended order; sort defensively in case that ever changes.
-  const pages = tree
-    .filter((e) => e.type === "blob" && e.path.startsWith(prefix) && e.path.endsWith("/page.html"))
+  const blobs = tree
+    .filter((e) => e.type === "blob" && e.path.startsWith(prefix))
     .map((e) => e.path)
     .sort();
 
+  // Bucket every file by its `<group>/<item>` folder so an example carries all
+  // its sibling files, not just page.html.
+  const folders = new Map<string, string[]>();
+  for (const path of blobs) {
+    // "00-introduction/00-hello-world/page.html" — keep only <group>/<item>/<file>.
+    const parts = path.slice(prefix.length).split("/");
+    if (parts.length !== 3) continue;
+    const folder = `${parts[0]}/${parts[1]}`;
+    (folders.get(folder) ?? folders.set(folder, []).get(folder)!).push(path);
+  }
+
   const groups = new Map<string, PlaygroundGroup>();
 
-  for (const path of pages) {
-    // "00-introduction/00-hello-world/page.html"
-    const parts = path.slice(prefix.length).split("/");
-    if (parts.length !== 3) continue; // exactly <group>/<item>/page.html
+  for (const [folder, files] of folders) {
+    // An example is any folder that has a page.html to open and preview.
+    const entry = files.find((p) => p.endsWith("/page.html"));
+    if (!entry) continue;
 
-    const [groupDir, itemDir] = parts;
+    const [groupDir, itemDir] = folder.split("/");
     const groupSlug = stripPrefix(groupDir);
     const itemSlug = stripPrefix(itemDir);
     if (!groupSlug || !itemSlug) continue;
@@ -136,12 +163,15 @@ export function buildGroups(tree: GitTreeEntry[]): PlaygroundGroup[] {
       group = { slug: groupSlug, label: humanize(groupSlug), items: [] };
       groups.set(groupSlug, group);
     }
+    // page.html leads (it becomes the active tab); the rest follow in tree order.
+    const filePaths = [entry, ...files.filter((p) => p !== entry)];
     group.items.push({
       slug: `${groupSlug}/${itemSlug}`,
       group: groupSlug,
       item: itemSlug,
       title: humanize(itemSlug),
-      filePath: path,
+      filePath: entry,
+      filePaths,
     });
   }
 
