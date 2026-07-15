@@ -8,7 +8,13 @@
 //   4. stale disk cache   — used if the live fetch fails (e.g. 403 rate limit)
 //   5. committed snapshot  — lib/playground-examples.snapshot.json, last resort
 //
-// Set GITHUB_TOKEN to lift the rate limit entirely.
+// Set GITHUB_TOKEN to lift the rate limit entirely. Without it a CI build shares
+// its IP's 60/hr budget and routinely lands on the snapshot, so the snapshot must
+// list EVERY file under src/(examples)/ — not just the page.html entries, or
+// examples silently lose their sibling files' StackBlitz tabs. Refresh it with:
+//   curl -s "https://api.github.com/repos/olumjs/olum-starter/git/trees/compact?recursive=1" \
+//     | jq '[.tree[] | select(.type=="blob") | .path | select(startswith("src/(examples)/"))]' \
+//     > lib/playground-examples.snapshot.json
 import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import {

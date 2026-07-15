@@ -23,7 +23,7 @@ export type PlaygroundExample = {
   /**
    * Every file in the example's folder, `page.html` first, so StackBlitz can
    * open them all as tabs (page.html active). Always non-empty and always leads
-   * with `filePath`. In the snapshot/manual fallbacks this is just `[filePath]`.
+   * with `filePath`. In the manual fallback this is just `[filePath]`.
    */
   filePaths: string[];
 };
