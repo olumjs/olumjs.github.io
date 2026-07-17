@@ -7,18 +7,22 @@ import { PLAYGROUND_TAG, clearPlaygroundCache } from "@/lib/playground-examples.
 // Invalidates the cached docs and playground examples so the next request
 // refetches them from GitHub.
 //
-// Optional protection: if REVALIDATE_SECRET is set, the request must include a
-// matching `?secret=…` (or `x-revalidate-secret` header). Without that env var
-// the endpoint is open — set it in production to prevent abuse.
+// Always protected: the request MUST include a `?secret=…` (or
+// `x-revalidate-secret` header) that matches REVALIDATE_SECRET. If that env var
+// is unset, the endpoint is disabled entirely — it never runs unauthenticated.
 export async function GET(request: Request) {
   const secret = process.env.REVALIDATE_SECRET;
-  if (secret) {
-    const provided =
-      new URL(request.url).searchParams.get("secret") ??
-      request.headers.get("x-revalidate-secret");
-    if (provided !== secret) {
-      return NextResponse.json({ error: "Invalid or missing secret." }, { status: 401 });
-    }
+  if (!secret) {
+    return NextResponse.json(
+      { error: "Endpoint disabled: REVALIDATE_SECRET is not configured." },
+      { status: 503 },
+    );
+  }
+  const provided =
+    new URL(request.url).searchParams.get("secret") ??
+    request.headers.get("x-revalidate-secret");
+  if (provided !== secret) {
+    return NextResponse.json({ error: "Invalid or missing secret." }, { status: 401 });
   }
 
   // "max" → stale-while-revalidate: entries are marked stale and refetched in
