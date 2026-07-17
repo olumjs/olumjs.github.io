@@ -7,18 +7,22 @@ import { PLAYGROUND_TAG, clearPlaygroundCache } from "@/lib/playground-examples.
 // Invalidates the cached docs and playground examples so the next request
 // refetches them from GitHub.
 //
-// Always protected: the request MUST include a `?secret=…` (or
-// `x-revalidate-secret` header) that matches REVALIDATE_SECRET. If that env var
-// is unset, the endpoint is disabled entirely — it never runs unauthenticated.
+// Guarded by the SAME secret as the analytics dashboard — the SECRET env var —
+// so one credential covers both. The request must supply it as `?secret=…` (or
+// the `x-revalidate-secret` header). This lets the logged-in dashboard's "Clear
+// cache" button reuse its stored secret. If SECRET is unset the endpoint is
+// disabled — it never runs open.
 export async function GET(request: Request) {
-  const secret = process.env.REVALIDATE_SECRET;
+  const secret = process.env.SECRET;
   if (!secret) {
     return NextResponse.json(
-      { error: "Endpoint disabled: REVALIDATE_SECRET is not configured." },
+      { error: "Endpoint disabled: SECRET is not configured." },
       { status: 503 },
     );
   }
-  const provided = new URL(request.url).searchParams.get("secret") ?? request.headers.get("x-revalidate-secret");
+  const provided =
+    new URL(request.url).searchParams.get("secret") ??
+    request.headers.get("x-revalidate-secret");
   if (provided !== secret) {
     return NextResponse.json({ error: "Invalid or missing secret." }, { status: 401 });
   }

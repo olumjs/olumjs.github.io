@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebaseAdmin";
 import { ANALYTICS_COL as COL } from "@/lib/analytics";
 
-// GET /api/analytics?pw=<password>
-// Returns the raw visit log for the dashboard. If ANALYTICS_PASSWORD is set,
-// the request must supply a matching `pw`; otherwise the endpoint is open.
+// GET /api/analytics?secret=<secret>
+// Returns the raw visit log for the dashboard. If SECRET is set, the request
+// must supply a matching `secret`; otherwise the endpoint is open.
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const pw = searchParams.get("pw");
-  const expected = process.env.ANALYTICS_PASSWORD;
+  const provided = searchParams.get("secret");
+  const expected = process.env.SECRET;
 
-  if (expected && pw !== expected) {
+  if (expected && provided !== expected) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

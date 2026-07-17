@@ -287,7 +287,7 @@ function PasswordGate({ onAuth }: { onAuth: (pw: string, data: AnalyticsData) =>
     setLoading(true);
     setError("");
     try {
-      const url = pw ? `/api/analytics?pw=${encodeURIComponent(pw)}` : "/api/analytics";
+      const url = pw ? `/api/analytics?secret=${encodeURIComponent(pw)}` : "/api/analytics";
       const res = await fetch(url);
       const json = await res.json();
       if (!res.ok || !json.ok) {
@@ -353,6 +353,8 @@ export default function AnalyticsDashboard() {
   const [storedPw, setStoredPw] = useState("");
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [clearMsg, setClearMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [visitsSearch, setVisitsSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>("all");
@@ -363,7 +365,7 @@ export default function AnalyticsDashboard() {
   // Auto-login from session storage
   useEffect(() => {
     const saved = sessionStorage.getItem("a_tk") ?? "";
-    const url = saved ? `/api/analytics?pw=${encodeURIComponent(saved)}` : "/api/analytics";
+    const url = saved ? `/api/analytics?secret=${encodeURIComponent(saved)}` : "/api/analytics";
 
     fetch(url)
       .then((r) => r.json())
@@ -385,7 +387,7 @@ export default function AnalyticsDashboard() {
     const pw = storedPw || sessionStorage.getItem("a_tk") || "";
     setRefreshing(true);
     try {
-      const url = pw ? `/api/analytics?pw=${encodeURIComponent(pw)}` : "/api/analytics";
+      const url = pw ? `/api/analytics?secret=${encodeURIComponent(pw)}` : "/api/analytics";
       const res = await fetch(url);
       const json = await res.json();
       if (json.ok) {
@@ -394,6 +396,28 @@ export default function AnalyticsDashboard() {
       }
     } finally {
       setRefreshing(false);
+    }
+  }, [storedPw]);
+
+  // Clear the docs + playground GitHub caches. Reuses the analytics secret
+  // (stored on login) since /api/clear-cache is guarded by the SECRET env var too.
+  const clearCache = useCallback(async () => {
+    const pw = storedPw || sessionStorage.getItem("a_tk") || "";
+    setClearing(true);
+    setClearMsg(null);
+    try {
+      const res = await fetch(`/api/clear-cache?secret=${encodeURIComponent(pw)}`);
+      const json = await res.json().catch(() => ({}));
+      setClearMsg(
+        res.ok
+          ? { ok: true, text: "Cache cleared" }
+          : { ok: false, text: json.error || `Failed (${res.status})` },
+      );
+    } catch {
+      setClearMsg({ ok: false, text: "Connection failed" });
+    } finally {
+      setClearing(false);
+      setTimeout(() => setClearMsg(null), 4000);
     }
   }, [storedPw]);
 
@@ -567,6 +591,32 @@ export default function AnalyticsDashboard() {
             </svg>
             Refresh
           </button>
+          <button
+            onClick={clearCache}
+            disabled={clearing}
+            title="Clear the docs & playground caches (refetch from GitHub)"
+            className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--fg)] py-[8px] px-4 text-[.75rem] hover:bg-[var(--surface-hover)] transition-colors disabled:opacity-50"
+          >
+            <svg
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              className={clearing ? "animate-spin" : ""}
+            >
+              <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+            </svg>
+            {clearing ? "Clearing…" : "Clear cache"}
+          </button>
+          {clearMsg && (
+            <span
+              className={`font-mono text-[11px] ${clearMsg.ok ? "text-[var(--accent)]" : "text-red-400"}`}
+            >
+              {clearMsg.text}
+            </span>
+          )}
         </div>
       </div>
 
