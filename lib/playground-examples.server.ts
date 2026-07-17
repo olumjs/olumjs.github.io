@@ -12,10 +12,16 @@
 // its IP's 60/hr budget and routinely lands on the snapshot, so the snapshot must
 // list EVERY file under src/(examples)/ — not just the page.html entries, or
 // examples silently lose their sibling files' StackBlitz tabs. Refresh it with:
-//   curl -s "https://api.github.com/repos/olumjs/olum-starter/git/trees/compact?recursive=1" \
-//     | jq '[.tree[] | select(.type=="blob") | .path | select(startswith("src/(examples)/"))]' \
-//     > lib/playground-examples.snapshot.json
+//   npm run snapshot:playground
+//
+// The disk cache is keyed to the snapshot's contents (see SNAPSHOT_HASH): tier 4
+// exists to ride out a transient fetch failure, not to outlive the catalogue it
+// describes. Committing a new snapshot is the signal that the old tree is gone,
+// so any cache written against the previous snapshot is discarded rather than
+// allowed to shadow tier 5 — which is what kept CI builds serving dead example
+// slugs after an upstream rename.
 import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import {
   type PlaygroundGroup,
@@ -34,11 +40,25 @@ const CACHE_TTL = 6 * 60 * 60 * 1000; // 6h — examples change rarely
 /** Next fetch-cache tag; revalidate it to force a refetch from GitHub. */
 export const PLAYGROUND_TAG = "playground-examples";
 
-type DiskCache = { fetchedAt: number; tree: GitTreeEntry[] };
+/**
+ * Identifies the committed snapshot this process was built against. Stamped into
+ * the disk cache on write and checked on read, so a cache Vercel restores from a
+ * previous build's `node_modules/.cache` is only trusted while the snapshot it
+ * was written alongside is still the current one.
+ */
+const SNAPSHOT_HASH = createHash("sha256")
+  .update(JSON.stringify(snapshotPaths))
+  .digest("hex")
+  .slice(0, 16);
+
+type DiskCache = { fetchedAt: number; snapshotHash: string; tree: GitTreeEntry[] };
 
 async function readDiskCache(): Promise<DiskCache | null> {
   try {
-    return JSON.parse(await readFile(CACHE_FILE, "utf8")) as DiskCache;
+    const cache = JSON.parse(await readFile(CACHE_FILE, "utf8")) as DiskCache;
+    // Also drops pre-hash caches, whose snapshotHash is undefined.
+    if (cache.snapshotHash !== SNAPSHOT_HASH) return null;
+    return cache;
   } catch {
     return null;
   }
@@ -47,7 +67,8 @@ async function readDiskCache(): Promise<DiskCache | null> {
 async function writeDiskCache(tree: GitTreeEntry[]): Promise<void> {
   try {
     await mkdir(CACHE_DIR, { recursive: true });
-    await writeFile(CACHE_FILE, JSON.stringify({ fetchedAt: Date.now(), tree }), "utf8");
+    const cache: DiskCache = { fetchedAt: Date.now(), snapshotHash: SNAPSHOT_HASH, tree };
+    await writeFile(CACHE_FILE, JSON.stringify(cache), "utf8");
   } catch {
     /* best-effort; a read-only FS just means we refetch next process */
   }
