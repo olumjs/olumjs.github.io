@@ -18,9 +18,7 @@ export async function GET(request: Request) {
       { status: 503 },
     );
   }
-  const provided =
-    new URL(request.url).searchParams.get("secret") ??
-    request.headers.get("x-revalidate-secret");
+  const provided = new URL(request.url).searchParams.get("secret") ?? request.headers.get("x-revalidate-secret");
   if (provided !== secret) {
     return NextResponse.json({ error: "Invalid or missing secret." }, { status: 401 });
   }
