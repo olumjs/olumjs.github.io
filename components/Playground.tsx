@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import sdk, { type VM } from "@stackblitz/sdk";
 import { useTheme } from "@/components/ThemeProvider";
@@ -24,6 +24,8 @@ function ExamplesDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
   const current = findExample(groups, currentSlug);
 
   useEffect(() => {
@@ -33,6 +35,20 @@ function ExamplesDropdown({
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
+
+  // Open the list centred on the current example rather than at the top — with
+  // ~50 items the selection is usually well below the fold. Set scrollTop on the
+  // panel directly instead of scrollIntoView, which would also scroll the page
+  // behind it. The panel is absolutely positioned, so it is the items'
+  // offsetParent and offsetTop is already relative to it. Layout effect so the
+  // list paints at the right offset with no visible jump.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const list = listRef.current;
+    const active = activeRef.current;
+    if (!list || !active) return;
+    list.scrollTop = active.offsetTop - list.clientHeight / 2 + active.offsetHeight / 2;
+  }, [open]);
 
   return (
     <div ref={ref} className="relative">
@@ -55,6 +71,7 @@ function ExamplesDropdown({
 
       {open && (
         <div
+          ref={listRef}
           className="absolute left-0 top-full z-50 mt-2 max-h-[70vh] w-60 overflow-y-auto rounded-xl animate-slide-down"
           style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}
           role="listbox"
@@ -69,6 +86,7 @@ function ExamplesDropdown({
                 return (
                   <button
                     key={ex.slug}
+                    ref={active ? activeRef : undefined}
                     role="option"
                     aria-selected={active}
                     onClick={() => {

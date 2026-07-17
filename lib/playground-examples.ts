@@ -44,8 +44,11 @@ export const EXAMPLES_ROOT = "src/(examples)";
  */
 export const STARTER_REPO_SLUG = `${REPO}/tree/${BRANCH}`;
 
-/** Strip the leading ordering prefix a folder carries: `00-`, `20-7`, `20190420-`. */
-const stripPrefix = (name: string) => name.replace(/^[0-9-]+/, "");
+/**
+ * Strip the leading ordering prefix a folder carries: `00-`, `20190420-`. Only
+ * the digits up to the first dash go — `12-7guis` keeps its `7guis`.
+ */
+const stripPrefix = (name: string) => name.replace(/^\d+-/, "");
 
 /** "hello-world" → "Hello world"; "special-elements" → "Special elements". */
 const humanize = (slug: string) => {
