@@ -16,6 +16,10 @@ export const DOC_REPOS = [
     repo: "olumjs/olum-router",
     minVer: "v0.3.1",
   },
+  {
+    repo: "olumjs/olum-store",
+    minVer: "v0.1.0",
+  },
 ];
 
 // Cache tag shared by every GitHub fetch below; /api/clear-cache invalidates it.
