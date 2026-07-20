@@ -3,6 +3,7 @@ import FeatureSection from "@/components/FeatureSection";
 import BenchmarkSection from "@/components/BenchmarkSection";
 // import TestimonialsSection from "@/components/TestimonialsSection";
 import ShowcaseSection from "@/components/ShowcaseSection";
+import PalestineSection from "@/components/PalestineSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
@@ -14,6 +15,7 @@ export default function Home() {
       <BenchmarkSection />
       {/* <TestimonialsSection /> */}
       <ShowcaseSection />
+      <PalestineSection />
       <CTASection />
       <Footer />
     </main>
