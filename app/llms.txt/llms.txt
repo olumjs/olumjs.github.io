@@ -1,0 +1,516 @@
+# Olum (olumjs)
+
+> Olum is a small, Vue-like JavaScript framework where components are plain `.html` files with a
+> `<script>` (logic) block, an optional scoped `<style>`, and a template using control tags
+> (`<if>`, `<else-if>`, `<else>`, `<show>`, `<for>`, `<transition>`). A Node compiler turns each
+> `.html` component into a JS module; a tiny browser runtime builds and diff-patches the DOM.
+> Ships with a file-based router (`olum-router`) and a zustand-style global store (`olum-store`).
+> Scope: prototypes, demos, hackathons, and small apps.
+
+This file is a complete reference for generating correct Olum code. The single design principle:
+**is an attribute fundamentally CODE or a STRING?** Native HTML already answers it — `onclick=""`
+is code, `class=""` is a string. Code-shaped attributes (`when`, `each`, `key`, `on*`, `html`)
+take a JS expression directly inside `""`. Everything else is a literal string with `{expr}` for
+dynamic parts. **No naked braces, no colon-bindings, no directives to memorize.**
+
+---
+
+## Project structure
+
+```
+src/
+├── page.html            → route "/"        (a folder is a route only if it has page.html)
+├── not-found.html       → global 404 page  (must be at src/ root; lowercase)
+├── main.js              → OPTIONAL entry. Omit it → router auto-generated from the file tree.
+├── about/page.html      → "/about"
+├── blog/page.html       → "/blog"
+├── blog/[slug]/page.html→ "/blog/:slug"    (dynamic segment → params().slug)
+├── users/[id]/posts/[postId]/page.html → "/users/:id/posts/:postId"
+├── (marketing)/pricing/page.html → "/pricing"  (parenthesized group dropped from URL)
+├── 01-guide/page.html   → "/guide"         (leading "NN-" prefix stripped; other digits kept: 7guis → /7guis)
+├── _drafts/…            → NO route          (leading underscore = skipped entirely)
+├── components/          → NO route          (reserved folder; PascalCase component files live here)
+└── utils/               → NO route          (reserved folder; stores/helpers live here)
+```
+
+- Route files: `page.html`, `not-found.html` (exact lowercase, case-sensitive).
+- Reusable components: `src/components/AddTodo.html` — PascalCase filenames.
+- Static route beats dynamic route on conflict. No catch-all `[...slug]` — each `[param]` = exactly one segment.
+- After each route mounts, router fires `window` event `viewLoaded` (useful for scroll restoration/analytics).
+
+### Static assets
+Files in `public/` are served at the site root. **Always reference with root-absolute URLs starting with `/`**
+(templates AND `<style>`): `/assets/logo.svg`, never `assets/logo.svg` (relative resolves against the
+current route and 404s in production). `public/index.html` is the app shell; `public/main.css` is the global stylesheet.
+
+---
+
+## Component file structure
+
+One `.html` file, up to three parts: `<script>` (logic), `<style>` (scoped CSS), and the template (everything else).
+
+```html title="Counter.html"
+<script>
+  const state = { count: 0 };
+  const inc = () => state.count++;
+</script>
+
+<style>
+  .counter { font-weight: 700; }
+</style>
+
+<div class="counter">
+  Count: {state.count}
+  <button onclick="inc()">+</button>
+</div>
+```
+
+- The **filename is the component name** — `CounterCard.html` → `<CounterCard />`. Component tags are **PascalCase**; that's how the compiler distinguishes a component from a plain element.
+- `<script>` and `<style>` are both optional. Markup-only files are valid static components.
+- Every instance renders inside a runtime wrapper `<div>` — that wrapper is `host` (see Lifecycle).
+- Import components by their file name (`.html` compiles to `.js`, so imports reference `.js`... but you write the source name):
+  ```html
+  <script>
+    import Navbar from "./components/Navbar";
+    import { formatDate } from "./utils";
+  </script>
+  ```
+
+---
+
+## Text interpolation
+
+`{expr}` in text is evaluated as JS and **HTML-escaped by default** (XSS-safe).
+
+```html
+<p>Hello {state.user.name}</p>
+<p>Total: {state.items.length} items</p>
+<p>{state.count > 0 ? 'positive' : 'zero'}</p>
+```
+
+- `null` / `undefined` render as an empty string.
+- No escape for a literal `{` in text — any `{…}` is interpolation. Use `{String.fromCharCode(123)}` or a const holding `"{"`.
+
+---
+
+## Attributes
+
+**String attributes (default):** a literal string; use `{expr}` inside for dynamic parts.
+```html
+<div class="card {state.active ? 'is-active' : ''}"></div>
+<a href="/users/{state.user.id}" title="Open {state.user.name}">Profile</a>
+<div style="color:{state.color}; background:{state.bg}; padding:8px;">box</div>  <!-- inline style = string + {expr}, kebab-case CSS -->
+```
+
+**Code attributes (value is an expression):** `when`, `each`, `key`, `on*`, `html` — the `""` value is JS.
+```html
+<if when="state.count > 0"> … </if>
+<button onclick="inc()">+</button>
+```
+
+**Boolean attributes (presence toggle):** when the whole value is a single `{expr}`, the attribute is emitted when truthy, omitted when falsy.
+```html
+<button disabled="{state.busy}">Save</button>
+<input type="checkbox" checked="{state.on}" />
+<details open="{state.expanded}">…</details>
+```
+Recognized: `checked, disabled, selected, readonly, required, hidden, autofocus, multiple, open, loop, muted, controls, autoplay, novalidate, default, defer, ismap, reversed`. Only applies when value is exactly one `{expr}`.
+
+---
+
+## Events
+
+Native `on*` attributes hold **code** (like real HTML). Two forms:
+```html
+<button onclick="inc()">+</button>
+<button onclick="inc(), log()">multi call</button>
+<input oninput="(e) => state.text = e.target.value" />   <!-- inline arrow, auto-extracted -->
+<button onclick="e => state.n++">no-paren arrow</button>
+<input oninput="setValue($event)" />                      <!-- $event = the DOM event -->
+```
+
+- **No event modifiers.** Do it in the handler: `onsubmit="(e)=> { e.preventDefault(); save() }"`.
+- **One `on*` attribute per element.** For a second listener, attach it imperatively in `onMount` (see below).
+- Inside `<for>`, handlers can reference loop variables directly: `<button onclick="remove(item)">`.
+- On a **component** tag, any `on*` name is a function prop, NOT a DOM event.
+
+---
+
+## Conditionals — `<if>` / `<else-if>` / `<else>`
+
+`when` is a JS expression. The element is **added/removed** from the DOM.
+```html
+<if when="state.tab === 'a'"><p>Tab A</p></if>
+<else-if when="state.tab === 'b'"><p>Tab B</p></else-if>
+<else><p>Fallback</p></else>
+```
+
+## Show / Hide — `<show>`
+
+Like `<if>`, but keeps content in the DOM and only toggles visibility (`display: contents` ↔ `none`).
+Content nodes are never replaced, so a playing `<video>`, animation, or typed input survives toggling.
+```html
+<show when="state.visible"><div class="panel">…</div></show>
+```
+Don't wrap `<tr>`/`<option>` in `<show>` (its wrapper `<div>` is invalid there) — use `<if>` instead.
+
+## Loops — `<for>`
+
+`each` is a JS expression. Three forms:
+```html
+<for each="fruit of state.fruits"><li>{fruit.name}</li></for>       <!-- array: "item of arr" -->
+<for each="i of 6"><span>Step {i}</span></for>                       <!-- numeric range: i goes 1→N (literal number ONLY) -->
+<for each="key in state.settings"><div>{key}</div></for>             <!-- object keys: "key in obj" -->
+```
+Index + array params (like `Array.map`), wrap in parens:
+```html
+<for each="(cat, index, arr) of state.cats"><li>{index+1}/{arr.length}: {cat.name}</li></for>
+<for each="(key, index, value) in state.settings"><div>{index}. {key} = {value}</div></for>  <!-- value = obj[key] -->
+```
+**Keyed loops — add `key`** (a JS expr, no braces, unique per item) so items are matched by identity across reorders/removals instead of by position. Needed to keep DOM state (checkboxes, videos, typed text) on the right row:
+```html
+<for each="todo of state.todos" key="todo.id"><TodoRow todo="{todo}" /></for>
+<for each="todo of state.todos" key="todo.id"><li>{todo.text}</li></for>
+```
+Dynamic count range: `each="i of Array.from({ length: state.n }, (_, k) => k + 1)"` (a literal number is required for the `of N` form).
+
+---
+
+## State & Reactivity
+
+Declare reactive state as a **literal top-level `const state = { ... }`**. Mutating `state` re-renders. Reactivity is **deep** (nested objects, arrays, `Map`, `Set`).
+
+```html
+<script>
+  const state = { count: 0, user: { name: "Ann" } };
+  const inc = () => state.count++;
+  const rename = () => (state.user.name = "Bo");   // nested mutation re-renders too
+</script>
+<p>{state.count} — {state.user.name}</p>
+```
+
+- Only `state` is reactive. Plain `const`/`let` are not tracked.
+- Deep mutations that re-render: `state.user.name = "Bo"`, `state.todos.push(t)`, `state.todos[0].done = true`, `state.tags.add("x")`.
+- Non-plain objects (`Date`, DOM nodes, class instances) are NOT tracked — assign back to a top-level key to re-render.
+- Re-assigning the **same reference** (`state.todos = state.todos`) is a no-op. Force a re-render with a fresh value (spread, `map`, `filter`, `slice`).
+- `const state = makeState()` is NOT recognized — must be a literal object in the component.
+- Re-renders **diff-patch the DOM in place** (untouched nodes survive: focus, caret, scroll, playing media). Re-renders are **microtask-batched** (many writes → one patch). In tests, `window.olum.flushUpdates()` settles pending re-renders synchronously.
+
+### Derived values = plain functions (no "computed")
+```html
+<script>
+  const state = { count: 1 };
+  const doubled = () => state.count * 2;
+  const quadrupled = () => doubled() * 2;   // derived can call derived
+</script>
+<p>{doubled()} {quadrupled()}</p>
+```
+
+### Watchers — `const watcher = { key(old, next) {} }`
+Fires on **top-level key assignment** only (not nested mutations).
+```html
+<script>
+  const state = { count: 0, log: "—" };
+  const watcher = { count(old, next) { state.log = `${old} → ${next}`; } };
+</script>
+```
+For a nested change to fire a watcher, assign a fresh value to the key: `state.user = { ...state.user, name: "Bo" }`.
+
+---
+
+## Components & Props
+
+Use a component by its **PascalCase** tag; import it in `<script>`.
+```html title="Parent.html"
+<script>
+  import StatusBadge from "./StatusBadge";
+  const state = { score: 5, name: "Ann" };
+</script>
+<StatusBadge label="Online" color="#16a34a" />
+<CounterCard title="Counter" count="{state.score}" data="{state.user}" greet="Hi {state.name}" />
+```
+
+**Prop value rules:**
+- `title="Hello"` → string (literal).
+- `count="{n + 1}"` → the expression's **real value/type** (number, object, etc.) when the whole value is one `{expr}`.
+- `greet="Hi {state.name}"` → interpolated **string**.
+- **No spread** (`<Comp {...obj} />`) and **no shorthand** (`<Comp {a} />` / `<Comp a={a} />`). Pass each field: `<Comp a="{obj.a}" />`.
+- Prop names must be plain camelCase identifiers (dashes truncate the name on component tags).
+
+**Reading props in the child** — `props()` imported from `olum`, called once at the **top level** of `<script>`:
+```html title="StatusBadge.html"
+<script>
+  import { props } from "olum";
+  const { label, color } = props();          // destructured names stay LIVE
+  const { size = "md" } = props();            // default when parent omits it
+  const { theme: t = "dark" } = props();      // alias + default
+</script>
+<span style="color:{color}">{label}</span>
+```
+Destructuring from `props()` is a **compiler feature**: each destructured name compiles into a fresh `props().name` read, so it stays current after the parent re-renders. `{props().label}` is equivalent.
+
+**Stays live:** plain names, aliases, defaults, `children`, function props.
+**One-time snapshot (NOT live):** `...rest`, nested patterns `{ user: { name } }`, computed keys `{ [key]: v }`, destructures not at the top level of `<script>`, indirect (`const p = props(); const { a } = p`), a default referencing another destructured prop.
+
+**Props are read-only (one-way data flow).** Data flows down via props; changes flow up via **callback props**:
+```html title="CounterCard.html"
+<!-- parent owns the value + hands down a setter -->
+<CounterCard value="{state.score}" onChange="{setScore}" />
+<!-- child reads the prop, calls the callback to request a change -->
+<script>
+  import { props } from "olum";
+  const { value, onChange } = props();
+  const inc = () => onChange(value + 1);
+</script>
+```
+Assigning to a destructured prop throws (`const`); never mutate props. On a **component** tag, `on*` names (even `onclick`) are just function props the child chooses when to call.
+
+---
+
+## Slots — `children`
+
+Content between a component's tags is exposed as `children` on `props()` (injected as **raw trusted markup**, not escaped — don't route untrusted strings through a slot).
+```html title="Box.html"
+<script>
+  import { props } from "olum";
+  const { children } = props();   // live
+</script>
+<div class="box">
+  <if when="children">{children}</if>
+  <else><em>no content</em></else>   <!-- fallback when parent passed nothing -->
+</div>
+```
+
+## Scope — public/private surface (advanced)
+
+Top-level props and methods are **private by default**. Scope attributes on the `<script>` tag expose them:
+`public`, `public-props`, `public-methods`, `private*` (default), plus `exclude-<kebab-name>` exceptions (read left-to-right; each keyword opens a group, following `exclude-*` attach to it).
+```html
+<script public-props exclude-age private-methods exclude-get-age>…</script>
+```
+Read a **mounted** component's public surface with `scope("Name"[, index])` from `olum` → `{ props, methods, state, el, key }` (or `null`). Escape hatch — prefer the store for shared state.
+
+---
+
+## Lifecycle — `onMount`
+
+Import `onMount` from `olum`; the callback runs on mount; **return a cleanup function** that runs on unmount (e.g. an `<if>` toggles it off, or a keyed item is removed). Call `onMount` **once** per component.
+```html
+<script>
+  import { onMount } from "olum";
+  const state = { photos: [], seconds: 0 };
+
+  onMount(async () => {
+    const res = await fetch("/api/photos");   // async: the place to fetch initial data
+    state.photos = await res.json();
+
+    const id = setInterval(() => state.seconds++, 1000);
+    window.addEventListener("keydown", onKey);
+    const main = host.querySelector("main");  // `host` = this component's root element (no import)
+
+    return () => {                             // cleanup: timers, listeners, actions
+      clearInterval(id);
+      window.removeEventListener("keydown", onKey);
+    };
+  });
+</script>
+```
+`host` is the component's own root element — use it instead of `document.querySelector`. `onMount` is also where you do **refs**, **actions** (there is no `bind:this` / `use:action`), and **global `window`/`document` listeners** — all wired imperatively and cleaned up in the return.
+
+---
+
+## Two-way binding (manual — there is no `model`)
+
+Every binding is a value-ish attribute reading state + an event handler writing back.
+```html
+<input value="{state.text}" oninput="(e) => state.text = e.target.value" />
+<textarea value="{state.text}" oninput="(e) => state.text = e.target.value"></textarea>
+<input type="number" value="{state.n}" oninput="(e) => state.n = +e.target.value" />  <!-- +cast: e.target.value is a string -->
+<input type="checkbox" checked="{state.yes}" onchange="(e) => state.yes = e.target.checked" />
+<input type="radio" name="s" checked="{state.scoops === 1}" onchange="setScoops(1)" />
+<select onchange="(e) => state.color = e.target.value">
+  <option value="red" selected="{state.color === 'red'}">red</option>   <!-- selected on OPTION -->
+</select>
+<input type="file" multiple onchange="(e) => state.files = e.target.files" />  <!-- FileList; Array.from() to loop -->
+```
+`value="{expr}"` on the `<select>` element itself silently does nothing — put `selected="{expr}"` on each option.
+For `<select multiple>`: `Array.from(e.target.options).filter(o => o.selected).map(o => o.value)`.
+
+---
+
+## Raw HTML & Security
+
+Everything interpolated is escaped by default (`olum.esc`). Opt out only for **trusted/sanitized** HTML:
+```html
+<div html="state.articleHtml"></div>        <!-- element-level: content becomes raw HTML of the expr -->
+<p>Intro: {olum.html(state.snippetHtml)} — end.</p>   <!-- inline, per-value -->
+```
+Both are greppable opt-outs. **Never pass untrusted user content to `html=` or `olum.html()`** — sanitize first (e.g. DOMPurify).
+
+---
+
+## Scoped CSS
+
+A component's `<style>` is auto-scoped (compiler tags elements with a unique attribute). Just write normal CSS.
+```html
+<style>
+  .title { color: #4f46e5; }         /* scoped — won't leak */
+  :root { --brand: #25c97e; }        /* :root / html / body selectors stay GLOBAL (escape hatch) */
+</style>
+```
+- `@keyframes` are renamed per-component (no collisions); `@media/@supports/@layer/@container` inner rules are scoped; `@font-face` untouched.
+- `url(...)` in component CSS must be root-absolute (`url(/assets/x.svg)`).
+- No `:host` selector — style your template elements directly. App-wide styles go in `public/main.css`.
+
+---
+
+## Transitions — `<transition>`
+
+Wrap **one element** to animate its enter/leave. Intro plays when it enters (`<if>` adds it); removal is deferred so the outro plays first.
+```html
+<if when="state.visible">
+  <transition transition="fade"><p>Fades in and out</p></transition>   <!-- same in+out -->
+</if>
+<transition in="fly({ y: 200, duration: 2000 })" out="fade"><p>…</p></transition>  <!-- separate in/out + params -->
+```
+- Attributes: `transition="fn(params)"` (both), `in="fn(params)"`, `out="fn(params)"`. `params` is a normal object evaluated at render time (can read `state` / loop vars).
+- **Built-ins** (no import): `fade`, `fly` (x,y,opacity), `scale` (start,opacity), `slide` (height), `draw` (SVG path). All take `delay`, `duration`, and `easing` (a **name string**, e.g. `'quintOut'`, `'bounceInOut'`; full set on `olum.easings`).
+- **Custom:** a function `(node, params) => ({ delay?, duration?, easing?, css?(t,u), tick?(t,u) })` — same contract as Svelte. `t` 0→1 on enter, 1→0 on leave; `u = 1 - t`. Define in `<script>` and name it. Params are JSON-serialized (can't pass a function as a param).
+- **Lifecycle events:** `onintrostart` / `onintroend` / `onoutrostart` / `onoutroend` = bare method names.
+- **Keyed lists:** works on items inside a keyed `<for>` (each plays its in/out as items add/remove).
+- **`flip`** attribute: animates keyed items to their new position on reorder (needs a keyed `<for>`). Takes `duration`, `delay`, `easing` (name).
+- **`crossfade()`** from `olum` returns `[send, receive]`; put `out="send({ key })"` on the leaving element and `in="receive({ key })"` on the entering one with the same key to fly between two spots. Wrap as named consts (it's destructured). Key off a **primitive id**, not an object.
+
+---
+
+## Debugging — `<log>`
+
+Compiles to `console.log(expr)` that runs on initial render + whenever the logged value changes; renders nothing.
+```html
+<log>{state.user}</log>
+<log>{state.a, state.b}</log>   <!-- multiple args pass through -->
+```
+
+---
+
+## Router (olum-router)
+
+File-based (see Project structure). No route config — the file tree IS the route table. History mode by default (clean URLs); falls back to hash mode if the History API is missing.
+
+**Links — `to` attribute** (client-side navigation, no reload):
+```html
+<a to="/about">About</a>          <!-- router intercepts; adds `active` class when URL matches -->
+<a href="/about">Hard reload</a>  <!-- normal browser nav -->
+```
+Keep `to` anchor content **plain text** (a nested `<span>`/icon intercepts the click and the nav misses). Style the current route with `a.active { … }`. Clicking the current route is a no-op.
+
+**Programmatic navigation** from `olum`:
+```js
+import { push, replace, back, forward, go, pathname } from "olum";
+push("/cart");        // pushState — Back returns to prev page
+replace("/dashboard"); // replaceState — for redirects (login), removes current from history
+back(); forward(); go(-2);
+pathname();           // current route path (normalized, leading slash, no trailing)
+```
+
+**Route params** — `params()` from `olum`, called once at top level of `<script>`:
+```html title="src/blog/[slug]/page.html"
+<script>
+  import { params } from "olum";
+  const { slug } = params();   // values arrive URL-decoded then LOWERCASED
+</script>
+<h1>blog: {slug}</h1>
+```
+Multiple dynamic segments work (`/users/[id]/posts/[postId]`). Static route wins over dynamic. No catch-all.
+
+**404:** add `not-found.html` at the root of `src/`.
+
+**Opting out / manual entry** — write `src/main.js` yourself and the compiler skips router generation:
+```js title="src/main.js"
+import Olum from "olum";
+import page from "./page.js";
+new Olum().$("#app").use(page);   // single component, no router (can drop olum-router from package.json)
+```
+Manual router config: build a `routes` array of `{ path, comp }`, `new Router({ mode: "history", root: "/", routes, err: "/404" })`, `new Olum().$("#app").use(router)`.
+
+---
+
+## Global Store (olum-store)
+
+Zustand-style shared state: define once in a plain `.js` module, import anywhere; components **subscribe by reading** it during render and re-render on change. No providers, no wiring.
+```js title="store.js"
+import { store } from "olum";
+export const cart = store({
+  items: [],
+  add(name) { this.items.push(name); },   // METHOD shorthand — `this` is the store
+  clear() { this.items = []; },
+  // clear: () => (this.items = []),       // ✗ arrow: `this` is NOT the store
+});
+```
+```html title="Basket.html"
+<script>
+  import { cart } from "./store";
+</script>
+<p>{cart.items.length} items</p>          <!-- this read subscribes Basket to cart -->
+<for each="name of cart.items"><li>{name}</li></for>
+<button onclick="cart.clear()">Empty</button>
+```
+- Same **deep reactivity** as `state` (nested objects/arrays/Map/Set). Non-plain objects untracked. Same-reference/no-change writes are skipped.
+- **Writes are microtask-batched** — many writes in a tick paint once. This makes the store the right home for large/frequently-mutated collections. DOM isn't updated immediately after a write (`await Promise.resolve()` to read it).
+- Mutating from outside an action works (`cart.items = []` in a handler). Split by concern (`cart.js`, `session.js`). `store(init)` takes a plain object (no class instances). `olum` auto-loads `olum-store`.
+
+### state vs props vs store
+- **state** — one component; synchronous per-mutation re-render; dies with the component.
+- **props** — parent → child; read-only; re-renders with the parent; dies with the child.
+- **store** — whole app; microtask-batched; lives as long as the app runs.
+- Rules: local first (state); one level down is props (+ callback prop to report up); shared or long-lived (survives route changes) is the store. **Prop-drilling through a component that doesn't use the prop = move it to a store.**
+
+---
+
+## Build & Deploy
+
+`npm run build` compiles every component, bundles with vite, writes static output to `dist/`. Compile errors fail the build (non-zero exit). Everything in `public/` is included. Host `dist/` anywhere static, but configure an **SPA fallback** to `index.html` (history mode):
+```
+Netlify  public/_redirects:  /*  /index.html  200
+Vercel   vercel.json:        { "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+```
+
+---
+
+## Common mistakes (✗ → ✓)
+
+| ✗ Don't | ✓ Do | Why |
+|---|---|---|
+| `when={x}` / `each={x}` | `when="x"` / `each="x"` | code values live inside `""` |
+| `value={state.x}` | `value="{state.x}"` | string attr + `{}` |
+| `oninput={(e)=>…}` | `oninput="(e)=>…"` | events in `""` |
+| `<Comp {a} />` / `<Comp a={a} />` | `<Comp a="{a}" />` | no shorthand / no naked-brace prop |
+| `<Comp {...obj} />` | `<Comp a="{obj.a}" b="{obj.b}" />` | no spread — pass each field |
+| `:style="{…}"` / `:title="x"` | `style="color:{x}"` / `title="{x}"` | string + `{}` |
+| `model="state.x"` | `value="{state.x}"` + `oninput` | bind manually |
+| `mode="prevent"` | `e.preventDefault()` in handler | no event modifiers |
+| literal `{` in text | `{String.fromCharCode(123)}` | any `{…}` is interpolated |
+| `<comp/>` | `<Comp/>` | components are PascalCase |
+| `<select value="{x}">` | `selected="{x === …}"` on each `<option>` | value on select does nothing |
+| `bind:this` / element refs | `host.querySelector(…)` in `onMount` | no refs |
+| `use:action` | wire up in `onMount`, clean up in its return | no action directive |
+| `each="i of state.n"` | `each="i of Array.from({length: state.n}, (_,k)=>k+1)"` | numeric range needs a literal number |
+| two `on*` on one element | one handler; extra listeners via `onMount` | one `on*` per element |
+| two `onMount(…)` calls | one call, one combined cleanup | only the first is wired |
+| `params()` / `props()` twice | destructure once at top level | only the first call is compiled |
+| `const { a, ...rest } = props()` | read extras via `props()` | `rest` is a snapshot, not live |
+| `const { color } = props(); color = "x"` | `onChange("x")` via callback prop | props are read-only |
+| `state.todos = state.todos` | assign a fresh array (spread/map/filter) | same-reference write is a no-op |
+| `url(assets/x.svg)` / `src="assets/…"` | `/assets/…` (leading slash) | asset URLs are root-absolute |
+| arrow action in store | method shorthand `add() {}` | arrows don't bind `this` |
+
+---
+
+## Known limitations
+
+- **No AST compiler** (regex + jsdom) — robust for common cases, fragile at some edges.
+- **Global reactivity bus** — broadcast dispatch, O(N) per update.
+- **No element refs / actions / dynamic `<component is>` / dimension bindings** — all done imperatively in `onMount`.
+- **No integrated component testing** framework yet.
+- **No TypeScript** in components.
+- Dynamic-component switching: use an `<if>/<else-if>/<else>` chain over a string in state.
