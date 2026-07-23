@@ -456,11 +456,11 @@ export const cart = store({
 <button onclick="cart.clear()">Empty</button>
 ```
 - Same **deep reactivity** as `state` (nested objects/arrays/Map/Set). Non-plain objects untracked. Same-reference/no-change writes are skipped.
-- **Writes are microtask-batched** — many writes in a tick paint once. This makes the store the right home for large/frequently-mutated collections. DOM isn't updated immediately after a write (`await Promise.resolve()` to read it).
+- **Writes are microtask-batched** — many writes in a tick paint once. Component `state` batches the same way, so the store is **not** faster for large collections; choose it because the data is **shared**, not for performance. DOM isn't updated immediately after a write (`await Promise.resolve()` to read it).
 - Mutating from outside an action works (`cart.items = []` in a handler). Split by concern (`cart.js`, `session.js`). `store(init)` takes a plain object (no class instances). `olum` auto-loads `olum-store`.
 
 ### state vs props vs store
-- **state** — one component; synchronous per-mutation re-render; dies with the component.
+- **state** — one component; microtask-batched re-render; dies with the component.
 - **props** — parent → child; read-only; re-renders with the parent; dies with the child.
 - **store** — whole app; microtask-batched; lives as long as the app runs.
 - Rules: local first (state); one level down is props (+ callback prop to report up); shared or long-lived (survives route changes) is the store. **Prop-drilling through a component that doesn't use the prop = move it to a store.**
