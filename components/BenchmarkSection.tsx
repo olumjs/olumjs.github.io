@@ -62,16 +62,15 @@ const ecosystem = [
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <rect x="4" y="4" width="16" height="16" rx="2" />
-        <rect x="9" y="9" width="6" height="6" />
-        <path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2" />
+        <path d="M4 6c0-1.1 3.6-2 8-2s8 .9 8 2-3.6 2-8 2-8-.9-8-2z" />
+        <path d="M4 6v6c0 1.1 3.6 2 8 2s8-.9 8-2V6" />
+        <path d="M4 12v6c0 1.1 3.6 2 8 2s8-.9 8-2v-6" />
       </svg>
     ),
-    name: "Compiler",
-    tag: "npm",
-    description: "Compiles `.html` single-file components into optimized JavaScript. The engine that powers the CLI, dev server, and build pipeline.",
-    // npmBadge: "https://img.shields.io/npm/v/olum-compiler?style=flat-square&color=25C97E&logo=npm&logoColor=white&label=npm",
-    links: [{ label: "npm", href: "https://www.npmjs.com/package/olum-compiler" }],
+    name: "Store",
+    tag: "official",
+    description: "Plain object-style global state. Define it once, import anywhere — components subscribe just by reading it, no providers or wiring.",
+    links: [{ label: "npm", href: "https://www.npmjs.com/package/olum-store" }],
     accent: "#25C97E",
   },
   {
@@ -86,17 +85,14 @@ const ecosystem = [
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <polyline points="4 17 10 11 4 5" />
-        <line x1="12" y1="19" x2="20" y2="19" />
+        <path d="M12 3l1.8 4.9L18.7 9.7l-4.9 1.8L12 16.4l-1.8-4.9L5.3 9.7l4.9-1.8L12 3z" />
+        <path d="M19 14.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z" />
       </svg>
     ),
-    name: "create-olum",
-    tag: "CLI",
-    description: "Powered by olum-cli under the hood. Scaffold a full project's boilerplate in one command — no install required.",
-    links: [
-      { label: "npm", href: "https://www.npmjs.com/package/create-olum" },
-      { label: "Guide", href: "/docs/get-started" },
-    ],
+    name: "Transitions",
+    tag: "v2",
+    description: "Animate elements as they enter and leave, with built-in transitions and full support for custom ones.",
+    links: [{ label: "Docs", href: "/docs/transitions" }],
     accent: "#25C97E",
   },
   {
