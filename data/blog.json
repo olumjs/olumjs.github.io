@@ -199,7 +199,7 @@
     "sections": [
       {
         "heading": "The short version",
-        "body": "OlumJS is a tiny JavaScript framework that lets you build single-page apps with nothing but the basics — real HTML, CSS, and vanilla JavaScript. A component isn't a special file format; it's an ordinary .html file. There's no virtual DOM, no new language to learn, and the whole runtime is about 8 kb.\n\nIt exists for one kind of moment: you have an idea and you want to prove it — fast. This is the story of what Olum is, why I built it, and when you should (and shouldn't) reach for it."
+        "body": "OlumJS is a tiny JavaScript framework that lets you build single-page apps with nothing but the basics — real HTML, CSS, and vanilla JavaScript. A component isn't a special file format; it's an ordinary .html file. no new language to learn, and the whole runtime is about 11 kb for the core.\n\nIt exists for one kind of moment: you have an idea and you want to prove it — fast. This is the story of what Olum is, why I built it, and when you should (and shouldn't) reach for it."
       },
       {
         "heading": "First, the name",
@@ -215,7 +215,7 @@
       },
       {
         "heading": "Why Olum over React, Vue, or Svelte?",
-        "body": "Here's my honest answer. Olum is plain text by about 90%. The component is literally an HTML file, so your editor already knows what to do with it — native formatting, native syntax highlighting, no editor extension to install, and no browser devtool extension to keep compatible across Chrome, Firefox, and the rest. It gets out of your way.\n\nAnd I'll be just as honest about the limits. Olum has no virtual DOM — that's a deliberate choice, because my goal was small apps, not large ones, so I didn't take that on. The framework closest to Olum is probably Svelte. Funny thing: I only discovered Svelte after I'd built Olum. If I'd known about it earlier, I might never have made Olum at all. But even today some of Svelte's syntax rubs me the wrong way — its if-blocks and loops make me feel confused. Olum keeps the template feeling like HTML, and that's the difference I care about."
+        "body": "Here's my honest answer. Olum is plain text by about 90%. A component is literally an HTML file, so your editor already knows how to work with it — native formatting, native syntax highlighting, no editor extension to install, and no browser devtools extension to keep compatible across Chrome, Firefox, and the rest. It stays out of your way.\n\nI'll also be honest about its scope. Olum was designed for small to medium-sized applications, with simplicity and developer experience as the primary goals rather than trying to solve every use case. The framework closest to Olum is probably Svelte. Funny enough, I only discovered Svelte after I'd already built Olum. If I'd known about it earlier, I might never have started this project at all. Even today, though, some of Svelte's template syntax—especially its conditionals and loops—doesn't feel as natural to me. I wanted templates to look and feel like HTML first, and that's the difference I care about."
       },
       {
         "heading": "It's just HTML — and that's the whole point",
